@@ -1,0 +1,1278 @@
+/* ================================================================
+   PARDIS JALALI DATEPICKER — Headless Engine (Vanilla JS)
+   ================================================================
+   Precise Jalaali ↔ Gregorian conversion algorithms.
+   Zero external dependencies.
+   ================================================================ */
+
+// ── Jalaali Math Core ──
+// Based on the reference jalaali-js algorithm by Behrang Noruzi Niya.
+// Uses integer division (truncation toward zero) for correctness.
+const JalaaliUtil = (() => {
+  // Jalaali leap year breaks array
+  const breaks = [
+    -61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181, 1210,
+    1635, 2060, 2097, 2192, 2262, 2324, 2394, 2456, 3178
+  ];
+
+  // Integer division (truncation toward zero), NOT Math.floor
+  function div(a, b) { return ~~(a / b); }
+  // Remainder consistent with div (always same sign as dividend)
+  function mod(a, b) { return a - ~~(a / b) * b; }
+
+  function jalCal(jy) {
+    const bl = breaks.length;
+    let gy = jy + 621;
+    let leapJ = -14;
+    let jp = breaks[0];
+    let jump;
+
+    if (jy < jp || jy >= breaks[bl - 1])
+      throw new Error('Invalid Jalaali year: ' + jy);
+
+    for (let i = 1; i < bl; i++) {
+      const jm = breaks[i];
+      jump = jm - jp;
+      if (jy < jm) break;
+      leapJ += div(jump, 33) * 8 + div(mod(jump, 33), 4);
+      jp = jm;
+    }
+
+    let n = jy - jp;
+    leapJ += div(n, 33) * 8 + div(mod(n, 33) + 3, 4);
+    if (mod(jump, 33) === 4 && (jump - n) === 4) leapJ++;
+
+    const leapG = div(gy, 4) - div((div(gy, 100) + 1) * 3, 4) - 150;
+    const march = 20 + leapJ - leapG;
+
+    // Find if this year is leap
+    if ((jump - n) < 6) {
+      n = n - jump + div(jump + 4, 33) * 33;
+    }
+    let leap = mod(mod(n + 1, 33) - 1, 4);
+    if (leap === -1) leap = 4;
+
+    return { leap: leap === 0 ? 1 : 0, gy, march };
+  }
+
+  function isLeapJalaaliYear(jy) {
+    return jalCal(jy).leap === 1;
+  }
+
+  function jalaaliMonthLength(jy, jm) {
+    if (jm <= 6) return 31;
+    if (jm <= 11) return 30;
+    return isLeapJalaaliYear(jy) ? 30 : 29;
+  }
+
+  function j2d(jy, jm, jd) {
+    const r = jalCal(jy);
+    return g2d(r.gy, 3, r.march) + (jm - 1) * 31 - div(jm, 7) * (jm - 7) + jd - 1;
+  }
+
+  function d2j(jdn) {
+    const gy = d2g(jdn).gy;
+    let jy = gy - 621;
+    const r = jalCal(jy);
+    const jdn1f = g2d(gy, 3, r.march);
+    let k = jdn - jdn1f;
+
+    if (k >= 0) {
+      if (k <= 185) {
+        const jm = 1 + div(k, 31);
+        const jd = 1 + mod(k, 31);
+        return { jy, jm, jd };
+      }
+      k -= 186;
+    } else {
+      jy--;
+      k += 179;
+      if (isLeapJalaaliYear(jy)) k++;
+    }
+
+    const jm = 7 + div(k, 30);
+    const jd = 1 + mod(k, 30);
+    return { jy, jm, jd };
+  }
+
+  function g2d(gy, gm, gd) {
+    let d = div((gy + div(gm - 8, 6) + 100100) * 1461, 4)
+      + div(153 * mod(gm + 9, 12) + 2, 5)
+      + gd - 34840408;
+    d = d - div(div(gy + 100100 + div(gm - 8, 6), 100) * 3, 4) + 752;
+    return d;
+  }
+
+  function d2g(jdn) {
+    let j = 4 * jdn + 139361631;
+    j = j + div(div(4 * jdn + 183187720, 146097) * 3, 4) * 4 - 3908;
+    const i = div(mod(j, 1461), 4) * 5 + 308;
+    const gd = div(mod(i, 153), 5) + 1;
+    const gm = mod(div(i, 153), 12) + 1;
+    const gy = div(j, 1461) - 100100 + div(8 - gm, 6);
+    return { gy, gm, gd };
+  }
+
+  function toJalaali(gy, gm, gd) {
+    return d2j(g2d(gy, gm, gd));
+  }
+
+  function toGregorian(jy, jm, jd) {
+    return d2g(j2d(jy, jm, jd));
+  }
+
+  function todayJalaali() {
+    const now = new Date();
+    return toJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+  }
+
+  return {
+    isLeapJalaaliYear,
+    jalaaliMonthLength,
+    toJalaali,
+    toGregorian,
+    todayJalaali,
+    j2d,
+    d2j,
+  };
+})();
+
+
+/* ================================================================
+   PARDIS ENGINE — Headless Calendar State Manager
+   ================================================================ */
+class PardisEngine {
+  static MONTH_NAMES = [
+    'فروردین', 'اردیبهشت', 'خرداد',
+    'تیر', 'مرداد', 'شهریور',
+    'مهر', 'آبان', 'آذر',
+    'دی', 'بهمن', 'اسفند'
+  ];
+
+  static WEEKDAY_NAMES = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+  static WEEKDAY_FULL = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+
+  constructor(options = {}) {
+    const today = JalaaliUtil.todayJalaali();
+
+    this.rangeMode = options.rangeMode || false;
+    this.minDate = options.minDate || null; // { jy, jm, jd }
+    this.maxDate = options.maxDate || null;
+    // outputFormat: 'jalali' | 'gregorian' | 'both' (default: 'both')
+    this.outputFormat = options.outputFormat || 'both';
+
+    // State
+    this.viewYear = options.initialYear || today.jy;
+    this.viewMonth = options.initialMonth || today.jm;
+    this.viewMode = 'day'; // 'day' | 'month' | 'year'
+
+    this.selectedDate = null;    // { jy, jm, jd }
+    this.rangeStart = null;
+    this.rangeEnd = null;
+    this.hoverDate = null;        // for range hover preview
+
+    // Today reference
+    this.today = today;
+
+    // Event listeners
+    this._listeners = {};
+  }
+
+  // ── Event System ──
+  on(event, fn) {
+    if (!this._listeners[event]) this._listeners[event] = [];
+    this._listeners[event].push(fn);
+    return () => this.off(event, fn);
+  }
+
+  off(event, fn) {
+    if (!this._listeners[event]) return;
+    this._listeners[event] = this._listeners[event].filter(f => f !== fn);
+  }
+
+  emit(event, data) {
+    (this._listeners[event] || []).forEach(fn => fn(data));
+  }
+
+  // ── Navigation ──
+  goToNextMonth() {
+    if (this.viewMonth === 12) {
+      this.viewMonth = 1;
+      this.viewYear++;
+    } else {
+      this.viewMonth++;
+    }
+    this.emit('viewChange', this.getViewInfo());
+  }
+
+  goToPrevMonth() {
+    if (this.viewMonth === 1) {
+      this.viewMonth = 12;
+      this.viewYear--;
+    } else {
+      this.viewMonth--;
+    }
+    this.emit('viewChange', this.getViewInfo());
+  }
+
+  goToNextYear() {
+    this.viewYear++;
+    this.emit('viewChange', this.getViewInfo());
+  }
+
+  goToPrevYear() {
+    this.viewYear--;
+    this.emit('viewChange', this.getViewInfo());
+  }
+
+  goToToday() {
+    this.viewYear = this.today.jy;
+    this.viewMonth = this.today.jm;
+    this.viewMode = 'day';
+    if (!this.rangeMode) {
+      this.selectedDate = { ...this.today };
+      this.emit('select', this.selectedDate);
+    }
+    this.emit('viewChange', this.getViewInfo());
+  }
+
+  goToDate(jy, jm) {
+    this.viewYear = jy;
+    this.viewMonth = jm;
+    this.emit('viewChange', this.getViewInfo());
+  }
+
+  setViewMode(mode) {
+    this.viewMode = mode;
+    this.emit('viewChange', this.getViewInfo());
+  }
+
+  toggleViewMode() {
+    if (this.viewMode === 'day') this.viewMode = 'month';
+    else if (this.viewMode === 'month') this.viewMode = 'year';
+    else this.viewMode = 'day';
+    this.emit('viewChange', this.getViewInfo());
+  }
+
+  // ── Selection ──
+  selectDate(jy, jm, jd) {
+    if (this.isDisabled(jy, jm, jd)) return;
+
+    if (this.rangeMode) {
+      if (!this.rangeStart || this.rangeEnd) {
+        // Start new range
+        this.rangeStart = { jy, jm, jd };
+        this.rangeEnd = null;
+        this.emit('rangeStart', PardisEngine.buildDatePayload(jy, jm, jd, this.outputFormat));
+      } else {
+        // Set end
+        const startJdn = JalaaliUtil.j2d(this.rangeStart.jy, this.rangeStart.jm, this.rangeStart.jd);
+        const endJdn = JalaaliUtil.j2d(jy, jm, jd);
+        if (endJdn < startJdn) {
+          this.rangeEnd = { ...this.rangeStart };
+          this.rangeStart = { jy, jm, jd };
+        } else {
+          this.rangeEnd = { jy, jm, jd };
+        }
+        this.emit('rangeSelect', {
+          start: PardisEngine.buildDatePayload(this.rangeStart.jy, this.rangeStart.jm, this.rangeStart.jd, this.outputFormat),
+          end:   PardisEngine.buildDatePayload(this.rangeEnd.jy,   this.rangeEnd.jm,   this.rangeEnd.jd,   this.outputFormat),
+        });
+      }
+    } else {
+      this.selectedDate = { jy, jm, jd };
+      this.viewYear = jy;
+      this.viewMonth = jm;
+      this.emit('select', PardisEngine.buildDatePayload(jy, jm, jd, this.outputFormat));
+    }
+  }
+
+  clearSelection() {
+    this.selectedDate = null;
+    this.rangeStart = null;
+    this.rangeEnd = null;
+    this.emit('clear', null);
+  }
+
+  // ── Queries ──
+  isDisabled(jy, jm, jd) {
+    if (this.minDate) {
+      const minJdn = JalaaliUtil.j2d(this.minDate.jy, this.minDate.jm, this.minDate.jd);
+      const curJdn = JalaaliUtil.j2d(jy, jm, jd);
+      if (curJdn < minJdn) return true;
+    }
+    if (this.maxDate) {
+      const maxJdn = JalaaliUtil.j2d(this.maxDate.jy, this.maxDate.jm, this.maxDate.jd);
+      const curJdn = JalaaliUtil.j2d(jy, jm, jd);
+      if (curJdn > maxJdn) return true;
+    }
+    return false;
+  }
+
+  isToday(jy, jm, jd) {
+    return jy === this.today.jy && jm === this.today.jm && jd === this.today.jd;
+  }
+
+  isSelected(jy, jm, jd) {
+    if (this.rangeMode) {
+      return this._isRangeStart(jy, jm, jd) || this._isRangeEnd(jy, jm, jd);
+    }
+    return this.selectedDate &&
+      this.selectedDate.jy === jy &&
+      this.selectedDate.jm === jm &&
+      this.selectedDate.jd === jd;
+  }
+
+  _isRangeStart(jy, jm, jd) {
+    return this.rangeStart &&
+      this.rangeStart.jy === jy && this.rangeStart.jm === jm && this.rangeStart.jd === jd;
+  }
+
+  _isRangeEnd(jy, jm, jd) {
+    return this.rangeEnd &&
+      this.rangeEnd.jy === jy && this.rangeEnd.jm === jm && this.rangeEnd.jd === jd;
+  }
+
+  isInRange(jy, jm, jd) {
+    if (!this.rangeStart || !this.rangeEnd) return false;
+    const jdn = JalaaliUtil.j2d(jy, jm, jd);
+    const startJdn = JalaaliUtil.j2d(this.rangeStart.jy, this.rangeStart.jm, this.rangeStart.jd);
+    const endJdn = JalaaliUtil.j2d(this.rangeEnd.jy, this.rangeEnd.jm, this.rangeEnd.jd);
+    return jdn > startJdn && jdn < endJdn;
+  }
+
+  isInHoverRange(jy, jm, jd) {
+    if (!this.rangeStart || this.rangeEnd || !this.hoverDate) return false;
+    const jdn = JalaaliUtil.j2d(jy, jm, jd);
+    const startJdn = JalaaliUtil.j2d(this.rangeStart.jy, this.rangeStart.jm, this.rangeStart.jd);
+    const hoverJdn = JalaaliUtil.j2d(this.hoverDate.jy, this.hoverDate.jm, this.hoverDate.jd);
+    const lo = Math.min(startJdn, hoverJdn);
+    const hi = Math.max(startJdn, hoverJdn);
+    return jdn > lo && jdn < hi;
+  }
+
+  isHoverRangeEnd(jy, jm, jd) {
+    if (!this.rangeStart || this.rangeEnd || !this.hoverDate) return false;
+    return this.hoverDate.jy === jy && this.hoverDate.jm === jm && this.hoverDate.jd === jd;
+  }
+
+  isWeekend(dayOfWeek) {
+    // In Iranian calendar, Friday (index 6) is weekend
+    return dayOfWeek === 6;
+  }
+
+  // ── Data Generation ──
+  getDaysOfMonth() {
+    const jy = this.viewYear;
+    const jm = this.viewMonth;
+    const daysInMonth = JalaaliUtil.jalaaliMonthLength(jy, jm);
+
+    // What day of week does the 1st of month fall on?
+    const g = JalaaliUtil.toGregorian(jy, jm, 1);
+    const firstDate = new Date(g.gy, g.gm - 1, g.gd);
+    // Saturday = 0, Sunday = 1, ... Friday = 6
+    let dow = firstDate.getDay(); // 0=Sun ... 6=Sat
+    // Convert to Shamsi week: Shanbe=0
+    const shamsiDow = (dow + 1) % 7;
+
+    const days = [];
+
+    // Previous month filler
+    if (shamsiDow > 0) {
+      let prevMonth = jm - 1;
+      let prevYear = jy;
+      if (prevMonth < 1) { prevMonth = 12; prevYear--; }
+      const prevDays = JalaaliUtil.jalaaliMonthLength(prevYear, prevMonth);
+      for (let i = shamsiDow - 1; i >= 0; i--) {
+        const d = prevDays - i;
+        days.push({
+          jy: prevYear, jm: prevMonth, jd: d,
+          dayOfWeek: (shamsiDow - i - 1 + 7) % 7,
+          isCurrentMonth: false,
+          isToday: this.isToday(prevYear, prevMonth, d),
+          isSelected: this.isSelected(prevYear, prevMonth, d),
+          isRangeStart: this._isRangeStart(prevYear, prevMonth, d),
+          isRangeEnd: this._isRangeEnd(prevYear, prevMonth, d),
+          isInRange: this.isInRange(prevYear, prevMonth, d),
+          isInHoverRange: this.isInHoverRange(prevYear, prevMonth, d),
+          isHoverRangeEnd: this.isHoverRangeEnd(prevYear, prevMonth, d),
+          isDisabled: this.isDisabled(prevYear, prevMonth, d),
+          isWeekend: this.isWeekend((shamsiDow - i - 1 + 7) % 7),
+        });
+      }
+    }
+
+    // Current month days
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dayIndex = (shamsiDow + d - 1) % 7;
+      days.push({
+        jy, jm, jd: d,
+        dayOfWeek: dayIndex,
+        isCurrentMonth: true,
+        isToday: this.isToday(jy, jm, d),
+        isSelected: this.isSelected(jy, jm, d),
+        isRangeStart: this._isRangeStart(jy, jm, d),
+        isRangeEnd: this._isRangeEnd(jy, jm, d),
+        isInRange: this.isInRange(jy, jm, d),
+        isInHoverRange: this.isInHoverRange(jy, jm, d),
+        isHoverRangeEnd: this.isHoverRangeEnd(jy, jm, d),
+        isDisabled: this.isDisabled(jy, jm, d),
+        isWeekend: this.isWeekend(dayIndex),
+      });
+    }
+
+    // Next month filler (fill to complete last row)
+    const remainder = days.length % 7;
+    if (remainder > 0) {
+      let nextMonth = jm + 1;
+      let nextYear = jy;
+      if (nextMonth > 12) { nextMonth = 1; nextYear++; }
+      for (let d = 1; d <= 7 - remainder; d++) {
+        const dayIndex = (shamsiDow + daysInMonth + d - 1) % 7;
+        days.push({
+          jy: nextYear, jm: nextMonth, jd: d,
+          dayOfWeek: dayIndex,
+          isCurrentMonth: false,
+          isToday: this.isToday(nextYear, nextMonth, d),
+          isSelected: this.isSelected(nextYear, nextMonth, d),
+          isRangeStart: this._isRangeStart(nextYear, nextMonth, d),
+          isRangeEnd: this._isRangeEnd(nextYear, nextMonth, d),
+          isInRange: this.isInRange(nextYear, nextMonth, d),
+          isInHoverRange: this.isInHoverRange(nextYear, nextMonth, d),
+          isHoverRangeEnd: this.isHoverRangeEnd(nextYear, nextMonth, d),
+          isDisabled: this.isDisabled(nextYear, nextMonth, d),
+          isWeekend: this.isWeekend(dayIndex),
+        });
+      }
+    }
+
+    return days;
+  }
+
+  getMonths() {
+    return PardisEngine.MONTH_NAMES.map((name, i) => ({
+      index: i + 1,
+      name,
+      isCurrent: this.today.jy === this.viewYear && this.today.jm === i + 1,
+      isSelected: this.selectedDate && this.selectedDate.jy === this.viewYear && this.selectedDate.jm === i + 1,
+    }));
+  }
+
+  getYears() {
+    const startYear = this.viewYear - 5;
+    const years = [];
+    for (let i = 0; i < 12; i++) {
+      const y = startYear + i;
+      years.push({
+        year: y,
+        isCurrent: y === this.today.jy,
+        isSelected: this.selectedDate && this.selectedDate.jy === y,
+      });
+    }
+    return years;
+  }
+
+  getViewInfo() {
+    return {
+      year: this.viewYear,
+      month: this.viewMonth,
+      monthName: PardisEngine.MONTH_NAMES[this.viewMonth - 1],
+      viewMode: this.viewMode,
+    };
+  }
+
+  // ── Date Payload Builder ──
+  /**
+   * Builds a rich date payload object.
+   * @param {number} jy  Jalali year
+   * @param {number} jm  Jalali month
+   * @param {number} jd  Jalali day
+   * @param {'jalali'|'gregorian'|'both'} format
+   * @returns {DatePayload}
+   *
+   * DatePayload shape (format='both'):
+   * {
+   *   jalali:    { year, month, day, monthName, formatted, formattedPersian, timestamp },
+   *   gregorian: { year, month, day, monthName, formatted, date, timestamp },
+   *   timestamp: <unix ms>,
+   *   iso:       '2025-03-21',
+   * }
+   */
+  static buildDatePayload(jy, jm, jd, format = 'both') {
+    const g = JalaaliUtil.toGregorian(jy, jm, jd);
+    const gDate = new Date(g.gy, g.gm - 1, g.gd);
+    const timestamp = gDate.getTime();
+    const iso = `${g.gy}-${String(g.gm).padStart(2,'0')}-${String(g.gd).padStart(2,'0')}`;
+
+    const GREGORIAN_MONTHS = [
+      'January','February','March','April','May','June',
+      'July','August','September','October','November','December'
+    ];
+
+    const jalaliPart = {
+      year:            jy,
+      month:           jm,
+      day:             jd,
+      monthName:       PardisEngine.MONTH_NAMES[jm - 1],
+      formatted:       `${jy}/${String(jm).padStart(2,'0')}/${String(jd).padStart(2,'0')}`,
+      formattedPersian: PardisEngine.formatPersian(jy, jm, jd),
+      timestamp,
+    };
+
+    const gregorianPart = {
+      year:      g.gy,
+      month:     g.gm,
+      day:       g.gd,
+      monthName: GREGORIAN_MONTHS[g.gm - 1],
+      formatted: `${g.gy}-${String(g.gm).padStart(2,'0')}-${String(g.gd).padStart(2,'0')}`,
+      date:      gDate,
+      timestamp,
+    };
+
+    if (format === 'jalali')    return { ...jalaliPart,    iso, timestamp };
+    if (format === 'gregorian') return { ...gregorianPart, iso, timestamp };
+    return { jalali: jalaliPart, gregorian: gregorianPart, iso, timestamp };
+  }
+
+  // ── Formatting Helpers ──
+  static formatDate(jy, jm, jd) {
+    return `${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`;
+  }
+
+  static formatPersian(jy, jm, jd) {
+    const toPersianNum = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+    return toPersianNum(`${jy}/${String(jm).padStart(2, '0')}/${String(jd).padStart(2, '0')}`);
+  }
+
+  static toPersianNum(n) {
+    return String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+  }
+
+  static fromPersianNum(s) {
+    return s.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+  }
+
+  static parseDateString(str) {
+    const normalized = PardisEngine.fromPersianNum(str).replace(/[\/\-\.]/g, '/');
+    const parts = normalized.split('/').map(Number);
+    if (parts.length === 3 && parts.every(p => !isNaN(p))) {
+      return { jy: parts[0], jm: parts[1], jd: parts[2] };
+    }
+    return null;
+  }
+}
+
+
+/* ================================================================
+   PARDIS RENDERER — Binds Engine to DOM
+   ================================================================ */
+class PardisRenderer {
+  constructor(containerEl, engine, options = {}) {
+    this.container = containerEl;
+    this.engine = engine;
+    this.options = options;
+    this.render();
+  }
+
+  render() {
+    const info = this.engine.getViewInfo();
+
+    if (info.viewMode === 'day') {
+      this._renderDayView(info);
+    } else if (info.viewMode === 'month') {
+      this._renderMonthView(info);
+    } else if (info.viewMode === 'year') {
+      this._renderYearView(info);
+    }
+  }
+
+  _renderDayView(info) {
+    const days = this.engine.getDaysOfMonth();
+
+    let html = `
+      <div class="pardis-calendar-header">
+        <button class="pardis-nav-btn" data-action="prevMonth">▶</button>
+        <div class="pardis-header-title">
+          <span class="pardis-title-chip" data-action="showMonth">${PardisEngine.MONTH_NAMES[info.month - 1]}</span>
+          <span class="pardis-title-chip" data-action="showYear">${PardisEngine.toPersianNum(info.year)}</span>
+        </div>
+        <button class="pardis-nav-btn" data-action="nextMonth">◀</button>
+      </div>
+      <div class="pardis-weekdays">
+        ${PardisEngine.WEEKDAY_NAMES.map((name, i) =>
+          `<div class="pardis-weekday${i === 6 ? ' weekend' : ''}">${name}</div>`
+        ).join('')}
+      </div>
+      <div class="pardis-days">
+        ${days.map(day => {
+          const classes = ['pardis-day'];
+          if (!day.isCurrentMonth) classes.push('other-month');
+          if (day.isToday) classes.push('today');
+          if (day.isSelected) classes.push('selected');
+          if (day.isRangeStart) classes.push('range-start');
+          if (day.isRangeEnd) classes.push('range-end');
+          if (day.isInRange) classes.push('in-range');
+          if (day.isInHoverRange) classes.push('hover-range');
+          if (day.isHoverRangeEnd) classes.push('hover-range-end');
+          if (day.isDisabled) classes.push('disabled');
+          if (day.isWeekend && !day.isSelected && !day.isRangeStart && !day.isRangeEnd) classes.push('weekend');
+
+          return `<div class="${classes.join(' ')}" data-jy="${day.jy}" data-jm="${day.jm}" data-jd="${day.jd}">${PardisEngine.toPersianNum(day.jd)}</div>`;
+        }).join('')}
+      </div>
+      <div class="pardis-footer">
+        ${this.engine.rangeMode
+          ? `<span class="pardis-range-hint">${
+              !this.engine.rangeStart
+                ? '<span class="hint-dot"></span> روز شروع را انتخاب کنید'
+                : !this.engine.rangeEnd
+                  ? '<span class="hint-dot picking"></span> روز پایان را انتخاب کنید'
+                  : '<span class="hint-dot done"></span> بازه انتخاب شد'
+            }</span>`
+          : '<button class="pardis-footer-btn today-btn" data-action="goToday">امروز</button>'
+        }
+        <button class="pardis-footer-btn clear-btn" data-action="clear">پاک کردن</button>
+      </div>
+    `;
+
+    this._setHTML(html);
+    this._bindDayEvents();
+  }
+
+  _renderMonthView(info) {
+    const months = this.engine.getMonths();
+
+    let html = `
+      <div class="pardis-calendar-header">
+        <button class="pardis-nav-btn" data-action="prevYear">▶</button>
+        <div class="pardis-header-title">
+          <span class="pardis-title-chip active-view" data-action="showMonth">ماه</span>
+          <span class="pardis-title-chip" data-action="showYear">${PardisEngine.toPersianNum(info.year)}</span>
+        </div>
+        <button class="pardis-nav-btn" data-action="nextYear">◀</button>
+      </div>
+      <div class="pardis-grid-view">
+        ${months.map(m => {
+          const classes = ['pardis-grid-cell'];
+          if (m.isCurrent) classes.push('current');
+          if (m.isSelected) classes.push('selected-period');
+          return `<div class="${classes.join(' ')}" data-month="${m.index}">${m.name}</div>`;
+        }).join('')}
+      </div>
+    `;
+
+    this._setHTML(html);
+    this._bindMonthEvents();
+  }
+
+  _renderYearView(info) {
+    const years = this.engine.getYears();
+
+    let html = `
+      <div class="pardis-calendar-header">
+        <button class="pardis-nav-btn" data-action="prevDecade">▶</button>
+        <div class="pardis-header-title">
+          <span class="pardis-title-chip" data-action="showMonth">ماه</span>
+          <span class="pardis-title-chip active-view" data-action="showYear">${PardisEngine.toPersianNum(years[0].year)}–${PardisEngine.toPersianNum(years[years.length - 1].year)}</span>
+        </div>
+        <button class="pardis-nav-btn" data-action="nextDecade">◀</button>
+      </div>
+      <div class="pardis-grid-view">
+        ${years.map(y => {
+          const classes = ['pardis-grid-cell'];
+          if (y.isCurrent) classes.push('current');
+          if (y.isSelected) classes.push('selected-period');
+          return `<div class="${classes.join(' ')}" data-year="${y.year}">${PardisEngine.toPersianNum(y.year)}</div>`;
+        }).join('')}
+      </div>
+    `;
+
+    this._setHTML(html);
+    this._bindYearEvents();
+  }
+
+  _setHTML(html) {
+    // Preserve handle in bottom sheet
+    const handle = this.container.querySelector('.pardis-sheet-handle');
+    if (handle) {
+      // We're in bottom sheet
+      this.container.innerHTML = '';
+      this.container.appendChild(handle);
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = html;
+      while (wrapper.firstChild) {
+        this.container.appendChild(wrapper.firstChild);
+      }
+    } else {
+      this.container.innerHTML = html;
+    }
+  }
+
+  _bindDayEvents() {
+    this.container.querySelectorAll('.pardis-day:not(.empty):not(.disabled)').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const jy = +el.dataset.jy;
+        const jm = +el.dataset.jm;
+        const jd = +el.dataset.jd;
+        this.engine.selectDate(jy, jm, jd);
+        this.render();
+      });
+
+      if (this.engine.rangeMode) {
+        el.addEventListener('mouseenter', () => {
+          if (!this.engine.rangeStart || this.engine.rangeEnd) return;
+          this.engine.hoverDate = { jy: +el.dataset.jy, jm: +el.dataset.jm, jd: +el.dataset.jd };
+          this._updateHoverClasses();
+        });
+      }
+    });
+
+    if (this.engine.rangeMode) {
+      this.container.querySelector('.pardis-days').addEventListener('mouseleave', (e) => {
+        e.stopPropagation();
+        if (!this.engine.rangeStart || this.engine.rangeEnd) return;
+        this.engine.hoverDate = null;
+        this._updateHoverClasses();
+      });
+    }
+
+    this._bindHeaderActions();
+  }
+
+  _updateHoverClasses() {
+    if (!this.engine.rangeMode) return;
+    const startJdn = this.engine.rangeStart
+      ? JalaaliUtil.j2d(this.engine.rangeStart.jy, this.engine.rangeStart.jm, this.engine.rangeStart.jd)
+      : null;
+    const hoverJdn = this.engine.hoverDate
+      ? JalaaliUtil.j2d(this.engine.hoverDate.jy, this.engine.hoverDate.jm, this.engine.hoverDate.jd)
+      : null;
+    const lo = (startJdn && hoverJdn) ? Math.min(startJdn, hoverJdn) : null;
+    const hi = (startJdn && hoverJdn) ? Math.max(startJdn, hoverJdn) : null;
+
+    this.container.querySelectorAll('.pardis-day').forEach(el => {
+      const jdn = JalaaliUtil.j2d(+el.dataset.jy, +el.dataset.jm, +el.dataset.jd);
+      const isHoverEnd = hoverJdn !== null && jdn === hoverJdn;
+      const isInHover = lo !== null && hi !== null && jdn > lo && jdn < hi;
+      el.classList.toggle('hover-range', isInHover);
+      el.classList.toggle('hover-range-end', isHoverEnd);
+    });
+
+    // update hint text
+    const hint = this.container.querySelector('.pardis-range-hint');
+    if (hint) {
+      if (this.engine.rangeStart && !this.engine.rangeEnd) {
+        hint.innerHTML = '<span class="hint-dot picking"></span> روز پایان را انتخاب کنید';
+      } else if (!this.engine.rangeStart) {
+        hint.innerHTML = '<span class="hint-dot"></span> روز شروع را انتخاب کنید';
+      } else {
+        hint.innerHTML = '<span class="hint-dot done"></span> بازه انتخاب شد';
+      }
+    }
+  }
+
+  _bindMonthEvents() {
+    this.container.querySelectorAll('.pardis-grid-cell').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const month = +el.dataset.month;
+        this.engine.viewMonth = month;
+        this.engine.viewMode = 'day';
+        this.engine.emit('viewChange', this.engine.getViewInfo());
+        this.render();
+      });
+    });
+    this._bindHeaderActions();
+  }
+
+  _bindYearEvents() {
+    this.container.querySelectorAll('.pardis-grid-cell').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const year = +el.dataset.year;
+        this.engine.viewYear = year;
+        this.engine.viewMode = 'month';
+        this.engine.emit('viewChange', this.engine.getViewInfo());
+        this.render();
+      });
+    });
+    this._bindHeaderActions();
+  }
+
+  _bindHeaderActions() {
+    this.container.querySelectorAll('[data-action]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const action = el.dataset.action;
+        switch (action) {
+          case 'prevMonth': this.engine.goToPrevMonth(); break;
+          case 'nextMonth': this.engine.goToNextMonth(); break;
+          case 'prevYear': this.engine.goToPrevYear(); break;
+          case 'nextYear': this.engine.goToNextYear(); break;
+          case 'prevDecade': this.engine.viewYear -= 12; this.engine.emit('viewChange', this.engine.getViewInfo()); break;
+          case 'nextDecade': this.engine.viewYear += 12; this.engine.emit('viewChange', this.engine.getViewInfo()); break;
+          case 'toggleView': this.engine.toggleViewMode(); break;
+          case 'showMonth': this.engine.setViewMode('month'); break;
+          case 'showYear': this.engine.setViewMode('year'); break;
+          case 'goToday': this.engine.goToToday(); break;
+          case 'clear': this.engine.clearSelection(); break;
+        }
+        this.render();
+      });
+    });
+  }
+}
+
+
+/* ================================================================
+   INPUT MASK — Auto-format Persian date as user types
+   ================================================================ */
+class PardisInputMask {
+  constructor(inputEl, engine) {
+    this.input = inputEl;
+    this.engine = engine;
+    this._bind();
+  }
+
+  _bind() {
+    this.input.addEventListener('input', (e) => this._onInput(e));
+    this.input.addEventListener('keydown', (e) => this._onKeydown(e));
+  }
+
+  _onInput(e) {
+    let val = this.input.value;
+    // Normalize: convert Persian digits to latin for processing
+    let latin = PardisEngine.fromPersianNum(val);
+    // Remove anything that's not digit or slash
+    latin = latin.replace(/[^\d\/]/g, '');
+    // Remove extra slashes
+    const parts = latin.split('/');
+    if (parts.length > 3) {
+      latin = parts.slice(0, 3).join('/');
+    }
+
+    // Auto-insert slashes
+    const digits = latin.replace(/\//g, '');
+    let formatted = '';
+    for (let i = 0; i < digits.length && i < 8; i++) {
+      if (i === 4 || i === 6) formatted += '/';
+      formatted += digits[i];
+    }
+
+    // Convert back to Persian
+    const persian = PardisEngine.toPersianNum(formatted).replace(/\//g, '/');
+    this.input.value = persian;
+
+    // Try parse complete date
+    if (digits.length === 8) {
+      const parsed = PardisEngine.parseDateString(persian);
+      if (parsed && parsed.jm >= 1 && parsed.jm <= 12) {
+        const maxDay = JalaaliUtil.jalaaliMonthLength(parsed.jy, parsed.jm);
+        if (parsed.jd >= 1 && parsed.jd <= maxDay) {
+          this.engine.viewYear = parsed.jy;
+          this.engine.viewMonth = parsed.jm;
+          this.engine.selectDate(parsed.jy, parsed.jm, parsed.jd);
+        }
+      }
+    }
+  }
+
+  _onKeydown(e) {
+    // Allow backspace, delete, arrows, tab
+    const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+    if (allowed.includes(e.key)) return;
+
+    // Allow digits (latin and Persian)
+    if (/[\d۰-۹]/.test(e.key)) return;
+    if (e.key === '/') return;
+
+    // Block everything else
+    if (!e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+    }
+  }
+
+  setValue(jy, jm, jd) {
+    this.input.value = PardisEngine.formatPersian(jy, jm, jd);
+  }
+
+  setRangeValue(start, end) {
+    const s = PardisEngine.formatPersian(start.jy, start.jm, start.jd);
+    const e = PardisEngine.formatPersian(end.jy, end.jm, end.jd);
+    this.input.value = `${s}  ←  ${e}`;
+  }
+
+  clear() {
+    this.input.value = '';
+  }
+}
+
+
+/* ================================================================
+   PardisDatepicker — Public API (multi-instance + inline support)
+   ================================================================
+   Usage — Popover (input-bound):
+     const dp = new PardisDatepicker('#myInput', {
+       rangeMode: false,
+       outputFormat: 'both',
+       onChange: (payload) => console.log(payload),
+       onRangeSelect: ({ start, end }) => console.log(start, end),
+     });
+
+   Usage — Inline (always visible, no input needed):
+     const dp = new PardisDatepicker('#myContainer', {
+       inline: true,
+       rangeMode: true,
+       onChange: (payload) => console.log(payload),
+     });
+
+   Methods:
+     dp.open()            // open popover (ignored in inline mode)
+     dp.close()           // close popover (ignored in inline mode)
+     dp.getValue()        // returns current payload (or null)
+     dp.setValue(jy,jm,jd) // programmatically select a date
+     dp.clear()           // clear selection
+     dp.destroy()         // remove all listeners and DOM
+   ================================================================ */
+class PardisDatepicker {
+  constructor(target, options = {}) {
+    this.options = Object.assign({
+      inline: false,
+      rangeMode: false,
+      outputFormat: 'both',
+      mobileMode: false,
+      minDate: null,
+      maxDate: null,
+      initialYear: null,
+      initialMonth: null,
+      onChange: null,
+      onRangeStart: null,
+      onRangeSelect: null,
+      onClear: null,
+    }, options);
+
+    // Resolve target element
+    this._target = typeof target === 'string'
+      ? document.querySelector(target)
+      : target;
+    if (!this._target) throw new Error(`PardisDatepicker: target not found — "${target}"`);
+
+    this._isOpen = false;
+    this._currentPayload = null;
+
+    this._buildEngine();
+    this._buildDOM();
+    this._bindEngineEvents();
+    if (!this.options.inline) this._bindPopoverEvents();
+  }
+
+  // ── Engine ──
+  _buildEngine() {
+    this.engine = new PardisEngine({
+      rangeMode:    this.options.rangeMode,
+      outputFormat: this.options.outputFormat,
+      minDate:      this.options.minDate,
+      maxDate:      this.options.maxDate,
+      initialYear:  this.options.initialYear,
+      initialMonth: this.options.initialMonth,
+    });
+  }
+
+  // ── DOM ──
+  _buildDOM() {
+    if (this.options.inline) {
+      // Inline: render calendar directly inside target
+      this._target.classList.add('pardis-inline-host');
+      this._calEl = document.createElement('div');
+      this._calEl.className = 'pardis-calendar pardis-inline';
+      this._target.appendChild(this._calEl);
+      this._renderer = new PardisRenderer(this._calEl, this.engine);
+      this._renderer.render();
+    } else {
+      // Popover: target must be an <input>
+      this._input = this._target;
+      this._inputMask = new PardisInputMask(this._input, this.engine);
+
+      // Wrap input if not already wrapped
+      let anchor = this._input.closest('.pardis-popover-anchor');
+      if (!anchor) {
+        anchor = document.createElement('div');
+        anchor.className = 'pardis-popover-anchor';
+        this._input.parentNode.insertBefore(anchor, this._input);
+        anchor.appendChild(this._input);
+      }
+      this._anchor = anchor;
+
+      // Create popover
+      this._popover = document.createElement('div');
+      this._popover.className = 'pardis-calendar-popover';
+      this._calEl = document.createElement('div');
+      this._calEl.className = 'pardis-calendar';
+      this._popover.appendChild(this._calEl);
+      anchor.appendChild(this._popover);
+
+      this._renderer = new PardisRenderer(this._calEl, this.engine);
+      this._renderer.render();
+    }
+  }
+
+  // ── Engine Events ──
+  _bindEngineEvents() {
+    const engine = this.engine;
+
+    this._offSelect = engine.on('select', (payload) => {
+      this._currentPayload = payload;
+      if (!this.options.inline) {
+        const j = payload.jalali || (payload.year !== undefined ? payload : null);
+        if (j && this._inputMask) this._inputMask.setValue(j.year, j.month, j.day);
+        this.close();
+      }
+      if (typeof this.options.onChange === 'function') this.options.onChange(payload);
+    });
+
+    this._offRangeStart = engine.on('rangeStart', (payload) => {
+      if (!this.options.inline && this._input) {
+        const j = payload.jalali || (payload.year !== undefined ? payload : null);
+        if (j) this._input.value = PardisEngine.formatPersian(j.year, j.month, j.day) + '  ←  ...';
+      }
+      if (typeof this.options.onRangeStart === 'function') this.options.onRangeStart(payload);
+    });
+
+    this._offRangeSelect = engine.on('rangeSelect', ({ start, end }) => {
+      this._currentPayload = { start, end };
+      if (!this.options.inline && this._inputMask) {
+        const js = start.jalali || (start.year !== undefined ? start : null);
+        const je = end.jalali   || (end.year   !== undefined ? end   : null);
+        if (js && je) this._inputMask.setRangeValue(
+          { jy: js.year, jm: js.month, jd: js.day },
+          { jy: je.year, jm: je.month, jd: je.day }
+        );
+      }
+      engine.hoverDate = null;
+      this._renderer.render();
+      if (typeof this.options.onRangeSelect === 'function') this.options.onRangeSelect({ start, end });
+    });
+
+    this._offClear = engine.on('clear', () => {
+      this._currentPayload = null;
+      if (!this.options.inline && this._inputMask) this._inputMask.clear();
+      if (typeof this.options.onClear === 'function') this.options.onClear();
+    });
+
+    engine.on('viewChange', () => this._renderer.render());
+  }
+
+  // ── Popover Events ──
+  _bindPopoverEvents() {
+    this._onFocus = () => this.open();
+    this._input.addEventListener('focus', this._onFocus);
+
+    this._onDocClick = (e) => {
+      if (!this._isOpen) return;
+      if (!this._anchor.contains(e.target) && !this._popover.contains(e.target)) this.close();
+    };
+    document.addEventListener('click', this._onDocClick);
+
+    this._onKeydown = (e) => { if (e.key === 'Escape') this.close(); };
+    document.addEventListener('keydown', this._onKeydown);
+  }
+
+  // ── Public API ──
+  open() {
+    if (this.options.inline || this._isOpen) return;
+    this._isOpen = true;
+    this._popover.classList.add('open');
+  }
+
+  close() {
+    if (this.options.inline || !this._isOpen) return;
+    this._isOpen = false;
+    this._popover.classList.remove('open');
+    this._renderer.render();
+  }
+
+  getValue() {
+    return this._currentPayload;
+  }
+
+  setValue(jy, jm, jd) {
+    this.engine.selectDate(jy, jm, jd);
+    this._renderer.render();
+  }
+
+  clear() {
+    this.engine.clearSelection();
+    this._renderer.render();
+  }
+
+  setOption(key, value) {
+    this.options[key] = value;
+    if (key === 'rangeMode') {
+      this.engine.rangeMode = value;
+      this.engine.clearSelection();
+      this._renderer.render();
+    }
+    if (key === 'outputFormat') this.engine.outputFormat = value;
+  }
+
+  destroy() {
+    if (this._onFocus)    this._input.removeEventListener('focus', this._onFocus);
+    if (this._onDocClick) document.removeEventListener('click', this._onDocClick);
+    if (this._onKeydown)  document.removeEventListener('keydown', this._onKeydown);
+    if (this._offSelect)      this._offSelect();
+    if (this._offRangeStart)  this._offRangeStart();
+    if (this._offRangeSelect) this._offRangeSelect();
+    if (this._offClear)       this._offClear();
+    if (this.options.inline) {
+      this._target.removeChild(this._calEl);
+      this._target.classList.remove('pardis-inline-host');
+    } else {
+      this._popover.remove();
+    }
+  }
+}
+
+
+/* ================================================================
+   APP — Demo Page
+   ================================================================ */
+(() => {
+  const themeSwitcher = document.getElementById('themeSwitcher');
+  const eventLogItems = document.getElementById('eventLogItems');
+
+  // ── Event Log ──
+  function logEvent(tag, label, payload) {
+    // Remove empty state
+    const empty = eventLogItems.querySelector('.dev-log-empty');
+    if (empty) empty.remove();
+
+    const item = document.createElement('div');
+    item.className = 'dev-log-item';
+
+    const json = payload !== undefined
+      ? JSON.stringify(payload, (k, v) => v instanceof Date ? v.toISOString() : v, 2)
+      : null;
+
+    item.innerHTML = `
+      <div class="dev-log-row">
+        <span class="tag ${tag}">${tag}</span>
+        <span class="dev-log-label">${label}</span>
+        <span class="dev-log-time">${new Date().toLocaleTimeString('fa-IR')}</span>
+      </div>
+      ${json ? `<pre class="dev-log-payload">${json}</pre>` : ''}
+    `;
+
+    // toggle payload visibility on click
+    const pre = item.querySelector('.dev-log-payload');
+    if (pre) {
+      pre.style.display = 'none';
+      item.querySelector('.dev-log-row').style.cursor = 'pointer';
+      item.querySelector('.dev-log-row').addEventListener('click', () => {
+        pre.style.display = pre.style.display === 'none' ? 'block' : 'none';
+      });
+    }
+
+    eventLogItems.prepend(item);
+    while (eventLogItems.children.length > 12) {
+      eventLogItems.removeChild(eventLogItems.lastChild);
+    }
+  }
+
+  document.getElementById('clearLogBtn').addEventListener('click', () => {
+    eventLogItems.innerHTML = '<div class="dev-log-empty">هنوز رویدادی ثبت نشده — یک تاریخ انتخاب کنید</div>';
+  });
+
+  // ── Helper ──
+  function jalaliOf(p) {
+    if (p && p.jalali) return p.jalali;
+    if (p && p.year !== undefined) return p;
+    return null;
+  }
+
+  function showOutput(elId, payload) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const j = jalaliOf(payload);
+    if (j) {
+      el.innerHTML = `<span class="out-jalali">${j.formattedPersian || j.formatted}</span>` +
+        (payload.gregorian ? ` <span class="out-greg">${payload.gregorian.formatted}</span>` : '');
+    } else if (payload && payload.start) {
+      const js = jalaliOf(payload.start);
+      const je = jalaliOf(payload.end);
+      el.innerHTML = js && je
+        ? `<span class="out-jalali">${js.formattedPersian}</span> ← <span class="out-jalali">${je.formattedPersian}</span>`
+        : '—';
+    } else {
+      el.textContent = '—';
+    }
+  }
+
+  // ── Multi-instance Popover ──
+  const dp1 = new PardisDatepicker('#input1', {
+    outputFormat: 'both',
+    onChange: (p) => { showOutput('out1', p); logEvent('select', `input1 — ${jalaliOf(p).formatted}`, p); },
+    onClear:  ()  => { document.getElementById('out1').textContent = '—'; },
+  });
+
+  const dp2 = new PardisDatepicker('#input2', {
+    outputFormat: 'both',
+    onChange: (p) => { showOutput('out2', p); logEvent('select', `input2 — ${jalaliOf(p).formatted}`, p); },
+    onClear:  ()  => { document.getElementById('out2').textContent = '—'; },
+  });
+
+  const dp3 = new PardisDatepicker('#input3', {
+    rangeMode: true,
+    outputFormat: 'both',
+    onRangeSelect: (p) => {
+      showOutput('out3', p);
+      const s = p.start.jalali.formatted;
+      const e = p.end.jalali.formatted;
+      logEvent('range', `input3 — ${s} → ${e}`, p);
+    },
+    onClear: () => { document.getElementById('out3').textContent = '—'; },
+  });
+
+  // ── Inline Instances ──
+  const dpInline1 = new PardisDatepicker('#inlineHost1', {
+    inline: true,
+    outputFormat: 'both',
+    onChange: (p) => { showOutput('outInline1', p); logEvent('select', `inline1 — ${jalaliOf(p).formatted}`, p); },
+    onClear:  ()  => { document.getElementById('outInline1').textContent = '—'; },
+  });
+
+  const dpInline2 = new PardisDatepicker('#inlineHost2', {
+    inline: true,
+    rangeMode: true,
+    outputFormat: 'both',
+    onRangeSelect: (p) => {
+      showOutput('outInline2', p);
+      logEvent('range', `inline2 — ${p.start.jalali.formatted} → ${p.end.jalali.formatted}`, p);
+    },
+    onClear: () => { document.getElementById('outInline2').textContent = '—'; },
+  });
+
+  // ── Theme Switcher ──
+  const themeMap = {
+    modern:  { attr: null,      body: 'theme-modern'  },
+    glass:   { attr: 'glass',   body: 'theme-glass'   },
+    classic: { attr: 'classic', body: 'theme-classic' },
+  };
+
+  themeSwitcher.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      themeSwitcher.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const theme = btn.dataset.theme;
+      const config = themeMap[theme];
+      if (config.attr) {
+        document.documentElement.setAttribute('data-pardis-theme', config.attr);
+      } else {
+        document.documentElement.removeAttribute('data-pardis-theme');
+      }
+      document.body.className = config.body;
+      logEvent('view', `تم: ${theme}`);
+    });
+  });
+
+})();

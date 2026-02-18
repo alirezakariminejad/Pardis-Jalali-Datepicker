@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pardis Jalali Datepicker</title>
+    <link rel="stylesheet" href="pardis-jalali-datepicker.css" />
+  </head>
+  <body class="theme-modern">
+    <!-- ── Demo Header ── -->
+    <div class="demo-header">
+      <h1>🗓️ Pardis Jalali Datepicker</h1>
+      <p>تقویم شمسی مدرن و بدون وابستگی — Headless Architecture با سه تم زیبا، انتخاب بازه‌ای، و ماسک ورودی</p>
+    </div>
+
+    <!-- ── Theme Switcher ── -->
+    <div class="theme-switcher" id="themeSwitcher">
+      <button class="theme-btn active" data-theme="modern">مدرن</button>
+      <button class="theme-btn" data-theme="glass">شیشه‌ای</button>
+      <button class="theme-btn" data-theme="classic">کلاسیک</button>
+    </div>
+
+    <!-- ── Demo Sections ── -->
+    <div class="demo-sections">
+      <!-- Section 1: Multi-instance Popover inputs -->
+      <div class="demo-section-block">
+        <div class="demo-section-label">📌 چند input مستقل (Popover Mode)</div>
+        <div class="demo-inputs-row">
+          <div class="demo-input-group">
+            <label class="demo-input-label">تاریخ شروع</label>
+            <div class="pardis-input-wrapper">
+              <input type="text" class="pardis-input" id="input1" placeholder="۱۴۰۴/۰۱/۰۱" autocomplete="off" inputmode="numeric" />
+              <svg
+                class="pardis-input-icon"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
+            <div class="demo-output" id="out1">—</div>
+          </div>
+          <div class="demo-input-group">
+            <label class="demo-input-label">تاریخ پایان</label>
+            <div class="pardis-input-wrapper">
+              <input type="text" class="pardis-input" id="input2" placeholder="۱۴۰۴/۰۱/۰۱" autocomplete="off" inputmode="numeric" />
+              <svg
+                class="pardis-input-icon"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
+            <div class="demo-output" id="out2">—</div>
+          </div>
+          <div class="demo-input-group">
+            <label class="demo-input-label">بازه‌ای (Range)</label>
+            <div class="pardis-input-wrapper">
+              <input type="text" class="pardis-input" id="input3" placeholder="۱۴۰۴/۰۱/۰۱  ←  ۱۴۰۴/۰۱/۱۵" autocomplete="off" inputmode="numeric" />
+              <svg
+                class="pardis-input-icon"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
+            <div class="demo-output" id="out3">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Inline (always visible) -->
+      <div class="demo-section-block">
+        <div class="demo-section-label">📅 Inline Mode — همیشه نمایان</div>
+        <div class="demo-inline-row">
+          <div class="demo-inline-group">
+            <div class="demo-inline-sublabel">تک تاریخ</div>
+            <div id="inlineHost1"></div>
+            <div class="demo-output" id="outInline1">—</div>
+          </div>
+          <div class="demo-inline-group">
+            <div class="demo-inline-sublabel">انتخاب بازه</div>
+            <div id="inlineHost2"></div>
+            <div class="demo-output" id="outInline2">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Dev Panel ── -->
+    <div class="dev-panel">
+      <!-- Live Events -->
+      <div class="dev-section">
+        <div class="dev-section-header">
+          <span class="dev-section-icon">📡</span>
+          <span>Live Events</span>
+          <button class="dev-clear-btn" id="clearLogBtn">پاک کردن</button>
+        </div>
+        <div class="dev-log-list" id="eventLogItems">
+          <div class="dev-log-empty">هنوز رویدادی ثبت نشده — یک تاریخ انتخاب کنید</div>
+        </div>
+      </div>
+
+      <!-- API Reference -->
+      <div class="dev-section">
+        <div class="dev-section-header">
+          <span class="dev-section-icon">📖</span>
+          <span>API Reference</span>
+        </div>
+
+        <!-- PardisDatepicker — Main API -->
+        <div class="api-block">
+          <div class="api-block-title">new PardisDatepicker(target, options)</div>
+          <table class="api-table">
+            <thead>
+              <tr>
+                <th>option</th>
+                <th>type</th>
+                <th>default</th>
+                <th>توضیح</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>inline</td>
+                <td>boolean</td>
+                <td>false</td>
+                <td>نمایش همیشگی بدون input</td>
+              </tr>
+              <tr>
+                <td>rangeMode</td>
+                <td>boolean</td>
+                <td>false</td>
+                <td>حالت انتخاب بازه</td>
+              </tr>
+              <tr>
+                <td>outputFormat</td>
+                <td>'both'|'jalali'|'gregorian'</td>
+                <td>'both'</td>
+                <td>فرمت خروجی</td>
+              </tr>
+              <tr>
+                <td>initialYear</td>
+                <td>number</td>
+                <td>امسال</td>
+                <td>سال اولیه نمایش</td>
+              </tr>
+              <tr>
+                <td>initialMonth</td>
+                <td>number</td>
+                <td>این ماه</td>
+                <td>ماه اولیه نمایش</td>
+              </tr>
+              <tr>
+                <td>minDate</td>
+                <td>{jy,jm,jd}</td>
+                <td>null</td>
+                <td>کمترین تاریخ</td>
+              </tr>
+              <tr>
+                <td>maxDate</td>
+                <td>{jy,jm,jd}</td>
+                <td>null</td>
+                <td>بیشترین تاریخ</td>
+              </tr>
+              <tr>
+                <td>onChange</td>
+                <td>function</td>
+                <td>null</td>
+                <td>callback انتخاب تاریخ</td>
+              </tr>
+              <tr>
+                <td>onRangeStart</td>
+                <td>function</td>
+                <td>null</td>
+                <td>callback شروع بازه</td>
+              </tr>
+              <tr>
+                <td>onRangeSelect</td>
+                <td>function</td>
+                <td>null</td>
+                <td>callback تکمیل بازه</td>
+              </tr>
+              <tr>
+                <td>onClear</td>
+                <td>function</td>
+                <td>null</td>
+                <td>callback پاک کردن</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Usage examples -->
+        <div class="api-block">
+          <div class="api-block-title">نحوه استفاده</div>
+          <pre class="api-code"><span class="code-comment">// Popover (input-bound)</span>
+const dp = new PardisDatepicker('#myInput', {
+  outputFormat: 'both',
+  onChange: (payload) => {
+    payload.jalali.formatted      <span class="code-comment">// '1404/01/01'</span>
+    payload.jalali.formattedPersian <span class="code-comment">// '۱۴۰۴/۰۱/۰۱'</span>
+    payload.gregorian.formatted   <span class="code-comment">// '2025-03-21'</span>
+    payload.iso                   <span class="code-comment">// '2025-03-21'</span>
+    payload.timestamp             <span class="code-comment">// unix ms</span>
+  }
+});
+
+<span class="code-comment">// Inline (همیشه نمایان)</span>
+const dp = new PardisDatepicker('#myDiv', {
+  inline: true,
+  rangeMode: true,
+  onRangeSelect: ({ start, end }) => {
+    start.jalali.formatted  <span class="code-comment">// '1404/01/05'</span>
+    end.gregorian.formatted <span class="code-comment">// '2025-04-05'</span>
+  }
+});</pre>
+        </div>
+
+        <!-- PardisDatepicker Methods -->
+        <div class="api-block">
+          <div class="api-block-title">متدهای PardisDatepicker</div>
+          <table class="api-table">
+            <thead>
+              <tr>
+                <th>متد</th>
+                <th>توضیح</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>open()</td>
+                <td>باز کردن popover</td>
+              </tr>
+              <tr>
+                <td>close()</td>
+                <td>بستن popover</td>
+              </tr>
+              <tr>
+                <td>getValue()</td>
+                <td>دریافت آخرین payload انتخاب‌شده</td>
+              </tr>
+              <tr>
+                <td>setValue(jy, jm, jd)</td>
+                <td>انتخاب برنامه‌نویسی تاریخ</td>
+              </tr>
+              <tr>
+                <td>clear()</td>
+                <td>پاک کردن انتخاب</td>
+              </tr>
+              <tr>
+                <td>setOption(key, value)</td>
+                <td>تغییر option بعد از ساخت</td>
+              </tr>
+              <tr>
+                <td>destroy()</td>
+                <td>حذف کامل instance و event listeners</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Payload structure -->
+        <div class="api-block">
+          <div class="api-block-title">ساختار payload (outputFormat='both')</div>
+          <pre class="api-code">{
+  jalali: {
+    year, month, day,
+    monthName,          <span class="code-comment">// 'فروردین'</span>
+    formatted,          <span class="code-comment">// '1404/01/01'</span>
+    formattedPersian,   <span class="code-comment">// '۱۴۰۴/۰۱/۰۱'</span>
+    timestamp
+  },
+  gregorian: {
+    year, month, day,
+    monthName,          <span class="code-comment">// 'March'</span>
+    formatted,          <span class="code-comment">// '2025-03-21'</span>
+    date,               <span class="code-comment">// Date object</span>
+    timestamp
+  },
+  iso,                  <span class="code-comment">// '2025-03-21'</span>
+  timestamp             <span class="code-comment">// unix ms</span>
+}
+<span class="code-comment">// outputFormat='jalali'    → فیلدها مستقیم (year, month, day, ...)</span>
+<span class="code-comment">// outputFormat='gregorian' → فیلدهای میلادی مستقیم</span></pre>
+        </div>
+
+        <!-- Low-level engine -->
+        <div class="api-block">
+          <div class="api-block-title">دسترسی مستقیم به engine</div>
+          <pre class="api-code">dp.engine.goToNextMonth()
+dp.engine.goToPrevMonth()
+dp.engine.goToNextYear()
+dp.engine.goToPrevYear()
+dp.engine.goToToday()
+dp.engine.setViewMode('month') <span class="code-comment">// 'day'|'month'|'year'</span>
+dp.engine.on('viewChange', (info) => {
+  info.year; info.month; info.monthName; info.viewMode
+})</pre>
+        </div>
+
+        <!-- buildDatePayload -->
+        <div class="api-block">
+          <div class="api-block-title">PardisEngine.buildDatePayload(jy, jm, jd, format?)</div>
+          <pre class="api-code"><span class="code-comment">// تبدیل دستی تاریخ به payload کامل</span>
+const p = PardisEngine.buildDatePayload(1404, 1, 1, 'both');
+p.jalali.formatted       <span class="code-comment">// '1404/01/01'</span>
+p.gregorian.formatted    <span class="code-comment">// '2025-03-21'</span>
+p.iso                    <span class="code-comment">// '2025-03-21'</span>
+p.timestamp              <span class="code-comment">// unix ms</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <script src="pardis-jalali-datepicker.js"></script>
+  </body>
+</html>
