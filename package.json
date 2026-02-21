@@ -1,0 +1,35 @@
+{
+  "name": "pardis-jalali-datepicker",
+  "version": "1.0.0",
+  "description": "A modern, zero-dependency Persian (Jalali/Shamsi) datepicker — multi-instance, inline mode, range selection, input masking, and three built-in themes.",
+  "main": "lib/pardis-jalali-datepicker.js",
+  "style": "lib/pardis-jalali-datepicker.css",
+  "files": [
+    "lib/pardis-jalali-datepicker.js",
+    "lib/pardis-jalali-datepicker.css"
+  ],
+  "keywords": [
+    "datepicker",
+    "jalali",
+    "shamsi",
+    "persian",
+    "jalaali",
+    "calendar",
+    "date",
+    "iran",
+    "farsi",
+    "rtl",
+    "vanilla-js",
+    "zero-dependency"
+  ],
+  "author": "Alireza Kariminejad",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alirezakariminejad/Pardis-Jalali-Datepicker.git"
+  },
+  "homepage": "https://alirezakariminejad.github.io/Pardis-Jalali-Datepicker/",
+  "bugs": {
+    "url": "https://github.com/alirezakariminejad/Pardis-Jalali-Datepicker/issues"
+  }
+}
