@@ -5,9 +5,6 @@ node_modules/
 dist/
 build/
 
-# Website / docs (generated, not part of the library source)
-website/
-
 # OS
 .DS_Store
 Thumbs.db
