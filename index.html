@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pardis Jalali Datepicker — تقویم شمسی مدرن</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #0a0a12;
+  --ink-soft: #3a3a52;
+  --ink-muted: #7b7b96;
+  --surface: #fafafa;
+  --surface-warm: #f3f1ee;
+  --accent: #4f46e5;
+  --accent-glow: #6366f1;
+  --accent-light: #eef2ff;
+  --accent-deep: #3730a3;
+  --coral: #f97066;
+  --emerald: #10b981;
+  --amber: #f59e0b;
+  --glass: rgba(255,255,255,0.06);
+  --font: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+  --transition: 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: var(--font);
+  background: var(--surface);
+  color: var(--ink);
+  line-height: 1.7;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+
+::selection {
+  background: var(--accent);
+  color: white;
+}
+
+/* ═══════════════════════════════════════════
+   NAVIGATION
+   ═══════════════════════════════════════════ */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0; right: 0;
+  z-index: 100;
+  padding: 16px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  background: rgba(250,250,250,0.8);
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  transition: var(--transition);
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: -0.3px;
+}
+
+.nav-logo-icon {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 12px rgba(79,70,229,0.3);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  transition: color 0.2s;
+  position: relative;
+}
+
+.nav-links a:hover { color: var(--accent); }
+
+.nav-cta {
+  padding: 10px 24px;
+  background: var(--ink);
+  color: white !important;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.3s;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+}
+
+.nav-cta:hover {
+  background: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(79,70,229,0.3);
+}
+
+/* ═══════════════════════════════════════════
+   HERO SECTION
+   ═══════════════════════════════════════════ */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 140px 24px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 900px;
+  background: radial-gradient(circle, rgba(79,70,229,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  top: 60px;
+  right: -100px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(249,112,102,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  background: var(--accent-light);
+  border: 1px solid rgba(79,70,229,0.12);
+  border-radius: 50px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 32px;
+  animation: fadeUp 0.8s ease both;
+}
+
+.hero-badge .pulse {
+  width: 8px; height: 8px;
+  background: var(--emerald);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.hero h1 {
+  font-size: clamp(2.6rem, 6vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -1.5px;
+  max-width: 800px;
+  animation: fadeUp 0.8s ease 0.1s both;
+}
+
+.hero h1 .gradient {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--coral) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: var(--ink-muted);
+  max-width: 560px;
+  margin: 24px auto 0;
+  font-weight: 400;
+  line-height: 1.8;
+  animation: fadeUp 0.8s ease 0.2s both;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 44px;
+  animation: fadeUp 0.8s ease 0.3s both;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn-primary {
+  padding: 16px 36px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 24px rgba(79,70,229,0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  background: var(--accent-deep);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(79,70,229,0.35);
+}
+
+.btn-secondary {
+  padding: 16px 36px;
+  background: white;
+  color: var(--ink);
+  border: 2px solid rgba(0,0,0,0.08);
+  border-radius: 50px;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* Install snippet */
+.hero-install {
+  margin-top: 48px;
+  animation: fadeUp 0.8s ease 0.4s both;
+}
+
+.install-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 24px;
+  background: var(--ink);
+  color: #e2e8f0;
+  border-radius: 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  direction: ltr;
+  text-align: left;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+.install-box .dollar {
+  color: var(--accent-glow);
+  font-weight: 700;
+}
+
+.install-box .copy-btn {
+  padding: 6px 14px;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.install-box .copy-btn:hover {
+  background: var(--accent);
+}
+
+/* ═══════════════════════════════════════════
+   FEATURES SECTION
+   ═══════════════════════════════════════════ */
+.features {
+  padding: 120px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: -1px;
+  max-width: 700px;
+  margin: 0 auto 16px;
+  line-height: 1.2;
+}
+
+.section-desc {
+  font-size: 1.05rem;
+  color: var(--ink-muted);
+  text-align: center;
+  max-width: 520px;
+  margin: 0 auto 64px;
+  line-height: 1.7;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.feature-card {
+  padding: 36px 32px;
+  background: white;
+  border: 1px solid rgba(0,0,0,0.05);
+  border-radius: var(--radius);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-glow));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.06);
+  border-color: rgba(79,70,229,0.1);
+}
+
+.feature-card:hover::before { opacity: 1; }
+
+.feature-icon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin-bottom: 20px;
+}
+
+.feature-icon.indigo { background: var(--accent-light); }
+.feature-icon.coral { background: rgba(249,112,102,0.1); }
+.feature-icon.emerald { background: rgba(16,185,129,0.1); }
+.feature-icon.amber { background: rgba(245,158,11,0.1); }
+.feature-icon.purple { background: rgba(168,85,247,0.1); }
+.feature-icon.sky { background: rgba(56,189,248,0.1); }
+
+.feature-card h3 {
+  font-size: 1.12rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
+}
+
+.feature-card p {
+  font-size: 0.92rem;
+  color: var(--ink-muted);
+  line-height: 1.7;
+}
+
+/* ═══════════════════════════════════════════
+   THEMES SHOWCASE
+   ═══════════════════════════════════════════ */
+.themes {
+  padding: 120px 24px;
+  background: var(--ink);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.themes::before {
+  content: '';
+  position: absolute;
+  top: -300px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1000px;
+  height: 1000px;
+  background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.themes .section-label { color: var(--accent-glow); }
+.themes .section-title { color: white; }
+.themes .section-desc { color: rgba(255,255,255,0.5); }
+
+.themes-showcase {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+.theme-card {
+  border-radius: var(--radius);
+  padding: 28px;
+  transition: all 0.4s;
+  cursor: default;
+  position: relative;
+}
+
+.theme-card:hover {
+  transform: translateY(-8px) scale(1.02);
+}
+
+.theme-card.modern {
+  background: white;
+  color: var(--ink);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.theme-card.glass {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: white;
+}
+
+.theme-card.classic {
+  background: #1e1e2e;
+  border: 1px solid #2d2d40;
+  color: #e2e8f0;
+}
+
+.theme-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  opacity: 0.6;
+}
+
+.theme-calendar {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+/* Mini calendar simulation */
+.mini-cal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.mini-cal-header .arrows {
+  display: flex;
+  gap: 8px;
+}
+
+.mini-cal-header .arrow {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  background: transparent;
+  color: inherit;
+}
+
+.mini-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 0 12px 8px;
+  gap: 4px;
+}
+
+.mini-cal-weekdays span {
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 600;
+  opacity: 0.4;
+}
+
+.mini-cal-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 0 12px 16px;
+  gap: 4px;
+}
+
+.mini-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.mini-day.today {
+  font-weight: 800;
+}
+
+.mini-day.selected {
+  color: white;
+  font-weight: 700;
+}
+
+.theme-card.modern .mini-cal-header { background: #f8f9fc; }
+.theme-card.modern .mini-day.today { border: 2px solid var(--accent); }
+.theme-card.modern .mini-day.selected { background: var(--accent); }
+.theme-card.modern .mini-day.in-range { background: var(--accent-light); color: var(--accent); border-radius: 0; }
+.theme-card.modern .arrow:hover { background: #f0f0f5; }
+
+.theme-card.glass .mini-cal-header { background: rgba(255,255,255,0.05); }
+.theme-card.glass .mini-day.today { border: 2px solid rgba(167,139,250,0.6); }
+.theme-card.glass .mini-day.selected { background: #a78bfa; }
+.theme-card.glass .mini-day.in-range { background: rgba(167,139,250,0.12); color: #c4b5fd; border-radius: 0; }
+.theme-card.glass .arrow:hover { background: rgba(255,255,255,0.1); }
+
+.theme-card.classic .mini-cal-header { background: #252536; }
+.theme-card.classic .mini-day.today { border: 2px solid #22d3ee; }
+.theme-card.classic .mini-day.selected { background: #22d3ee; color: #1e1e2e; }
+.theme-card.classic .mini-day.in-range { background: rgba(34,211,238,0.1); color: #22d3ee; border-radius: 0; }
+.theme-card.classic .arrow:hover { background: #2d2d40; }
+
+/* ═══════════════════════════════════════════
+   CODE SECTION
+   ═══════════════════════════════════════════ */
+.code-section {
+  padding: 120px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.code-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.code-content h3 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 16px;
+}
+
+.code-content p {
+  font-size: 1rem;
+  color: var(--ink-muted);
+  line-height: 1.8;
+  margin-bottom: 28px;
+}
+
+.code-features-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.code-features-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.code-features-list .check {
+  width: 24px; height: 24px;
+  background: rgba(16,185,129,0.1);
+  color: var(--emerald);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.code-block {
+  background: #0f0f1a;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.15);
+}
+
+.code-block-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  background: #161626;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.code-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+}
+
+.code-dot.red { background: #ff5f57; }
+.code-dot.yellow { background: #ffbd2e; }
+.code-dot.green { background: #28c840; }
+
+.code-block-title {
+  margin-right: auto;
+  margin-left: 12px;
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.3);
+  direction: ltr;
+}
+
+.code-block pre {
+  padding: 24px;
+  margin: 0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.8;
+  color: #e2e8f0;
+  direction: ltr;
+  text-align: left;
+  overflow-x: auto;
+}
+
+.code-block .keyword { color: #c084fc; }
+.code-block .string { color: #86efac; }
+.code-block .comment { color: #475569; font-style: italic; }
+.code-block .func { color: #67e8f9; }
+.code-block .prop { color: #fbbf24; }
+.code-block .number { color: #f97066; }
+
+/* ═══════════════════════════════════════════
+   API TABLE
+   ═══════════════════════════════════════════ */
+.api-section {
+  padding: 120px 24px;
+  background: var(--surface-warm);
+}
+
+.api-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.api-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 0;
+  background: rgba(0,0,0,0.04);
+  border-radius: 14px 14px 0 0;
+  padding: 6px 6px 0;
+  overflow-x: auto;
+}
+
+.api-tab {
+  padding: 12px 24px;
+  border: none;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  cursor: pointer;
+  border-radius: 10px 10px 0 0;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.api-tab.active {
+  background: white;
+  color: var(--accent);
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+}
+
+.api-tab:hover:not(.active) { color: var(--ink); }
+
+.api-panel {
+  background: white;
+  border-radius: 0 0 var(--radius) var(--radius);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+  overflow: hidden;
+  display: none;
+}
+
+.api-panel.active { display: block; }
+
+.api-table {
+  width: 100%;
+  border-collapse: collapse;
+  direction: ltr;
+  text-align: left;
+}
+
+.api-table th {
+  padding: 14px 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid rgba(0,0,0,0.06);
+  background: rgba(0,0,0,0.015);
+}
+
+.api-table td {
+  padding: 14px 20px;
+  font-size: 0.88rem;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  vertical-align: top;
+}
+
+.api-table tr:last-child td { border-bottom: none; }
+
+.api-table td:first-child {
+  font-family: 'Courier New', monospace;
+  font-size: 0.82rem;
+  color: var(--accent);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.api-table td:nth-child(2) {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: var(--emerald);
+}
+
+.api-table td:nth-child(3) {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+
+.api-table .desc-cell {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+/* ═══════════════════════════════════════════
+   CTA SECTION
+   ═══════════════════════════════════════════ */
+.cta {
+  padding: 140px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(79,70,229,0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.cta h2 {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin-bottom: 16px;
+}
+
+.cta p {
+  font-size: 1.1rem;
+  color: var(--ink-muted);
+  max-width: 480px;
+  margin: 0 auto 40px;
+}
+
+/* ═══════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════ */
+.footer {
+  padding: 48px 40px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-brand {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+
+.footer-links {
+  display: flex;
+  gap: 28px;
+  list-style: none;
+}
+
+.footer-links a {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover { color: var(--accent); }
+
+/* ═══════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.5); }
+}
+
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE RESPONSIVE
+   ═══════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .features-grid { grid-template-columns: repeat(2, 1fr); }
+  .themes-showcase { grid-template-columns: 1fr; max-width: 400px; }
+  .code-grid { grid-template-columns: 1fr; gap: 40px; }
+  .nav-links { display: none; }
+}
+
+@media (max-width: 600px) {
+  .features-grid { grid-template-columns: 1fr; }
+  .nav { padding: 14px 20px; }
+  .hero { padding: 120px 20px 60px; }
+  .footer { flex-direction: column; gap: 20px; text-align: center; }
+  .hero-actions { flex-direction: column; }
+  .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
+  .api-tabs { gap: 0; }
+  .api-tab { padding: 10px 14px; font-size: 0.8rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ NAVIGATION ═══ -->
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="nav-logo-icon">🗓️</div>
+    <span>Pardis</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#features">ویژگی‌ها</a></li>
+    <li><a href="#themes">تم‌ها</a></li>
+    <li><a href="#code">کدنویسی</a></li>
+    <li><a href="#api">مستندات</a></li>
+    <li><a href="https://github.com" class="nav-cta" target="_blank">GitHub ←</a></li>
+  </ul>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="pulse"></span>
+    نسخه پایدار — بدون وابستگی
+  </div>
+
+  <h1>
+    تقویم شمسی
+    <br>
+    <span class="gradient">مدرن و حرفه‌ای</span>
+  </h1>
+
+  <p class="hero-subtitle">
+    تقویم جلالی خالص با معماری Headless، سه تم زیبا، انتخاب بازه‌ای، ماسک ورودی هوشمند و بدون هیچ وابستگی خارجی.
+  </p>
+
+  <div class="hero-actions">
+    <a href="#code" class="btn-primary">
+      شروع سریع
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l-7 7 7 7"/></svg>
+    </a>
+    <a href="#features" class="btn-secondary">
+      بررسی ویژگی‌ها
+    </a>
+  </div>
+
+  <div class="hero-install">
+    <div class="install-box">
+      <span class="dollar">$</span>
+      <span id="installCmd">npm install pardis-jalali-datepicker</span>
+      <button class="copy-btn" onclick="copyInstall()">کپی</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section class="features" id="features">
+  <div class="section-label animate-on-scroll">ویژگی‌ها</div>
+  <h2 class="section-title animate-on-scroll">همه چیزی که به یک تقویم شمسی نیاز دارید</h2>
+  <p class="section-desc animate-on-scroll">معماری Headless، عملکرد بالا و سازگاری کامل با هر فریمورکی</p>
+
+  <div class="features-grid">
+    <div class="feature-card animate-on-scroll">
+      <div class="feature-icon indigo">⚡</div>
+      <h3>بدون وابستگی</h3>
+      <p>صفر وابستگی خارجی. الگوریتم‌های تبدیل تاریخ جلالی ↔ میلادی کاملاً خالص و دقیق بدون نیاز به moment.js یا هیچ کتابخانه دیگر.</p>
+    </div>
+
+    <div class="feature-card animate-on-scroll">
+      <div class="feature-icon coral">🧠</div>
+      <h3>معماری Headless</h3>
+      <p>موتور محاسباتی PardisEngine از رابط کاربری جداست. آزادی کامل برای ساخت UI سفارشی با حفظ منطق تاریخ شمسی.</p>
+    </div>
+
+    <div class="feature-card animate-on-scroll">
+      <div class="feature-icon emerald">📅</div>
+      <h3>انتخاب بازه‌ای</h3>
+      <p>قابلیت Range Selection با هاور هوشمند، انتخاب شروع و پایان، و تشخیص خودکار ترتیب تاریخ‌ها.</p>
+    </div>
+
+    <div class="feature-card animate-on-scroll">
+      <div class="feature-icon amber">🎨</div>
+      <h3>سه تم آماده</h3>
+      <p>تم مدرن (Clean)، شیشه‌ای (Glassmorphism)، و کلاسیک (Dark Admin) — قابل سفارشی‌سازی با CSS Variables.</p>
+    </div>
+
+    <div class="feature-card animate-on-scroll">
+      <div class="feature-icon purple">⌨️</div>
+      <h3>ماسک ورودی هوشمند</h3>
+      <p>تایپ تاریخ با ماسک خودکار اعداد فارسی، جداکننده خودکار «/»، و پشتیبانی از inputmode="numeric" برای موبایل.</p>
+    </div>
+
+    <div class="feature-card animate-on-scroll">
+      <div class="feature-icon sky">📱</div>
+      <h3>ریسپانسیو و Bottom Sheet</h3>
+      <p>حالت موبایل با Bottom Sheet، پشتیبانی از Touch Events، و سازگاری کامل با همه اندازه‌های صفحه.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ THEMES ═══ -->
+<section class="themes" id="themes">
+  <div class="section-label animate-on-scroll">تم‌ها</div>
+  <h2 class="section-title animate-on-scroll">سه تم متفاوت، یک تجربه بی‌نقص</h2>
+  <p class="section-desc animate-on-scroll">هر تم با CSS Variables کاملاً قابل سفارشی‌سازی است</p>
+
+  <div class="themes-showcase">
+    <!-- Modern Theme -->
+    <div class="theme-card modern animate-on-scroll">
+      <div class="theme-name">مدرن / Clean</div>
+      <div class="theme-calendar">
+        <div class="mini-cal-header">
+          <div class="arrows">
+            <button class="arrow">‹</button>
+            <button class="arrow">›</button>
+          </div>
+          <span>بهمن ۱۴۰۴</span>
+        </div>
+        <div class="mini-cal-weekdays">
+          <span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span>ج</span>
+        </div>
+        <div class="mini-cal-days">
+          <span class="mini-day" style="opacity:0.3">۲۸</span>
+          <span class="mini-day" style="opacity:0.3">۲۹</span>
+          <span class="mini-day" style="opacity:0.3">۳۰</span>
+          <span class="mini-day">۱</span>
+          <span class="mini-day">۲</span>
+          <span class="mini-day">۳</span>
+          <span class="mini-day">۴</span>
+          <span class="mini-day">۵</span>
+          <span class="mini-day">۶</span>
+          <span class="mini-day">۷</span>
+          <span class="mini-day">۸</span>
+          <span class="mini-day">۹</span>
+          <span class="mini-day in-range">۱۰</span>
+          <span class="mini-day in-range">۱۱</span>
+          <span class="mini-day selected">۱۲</span>
+          <span class="mini-day in-range">۱۳</span>
+          <span class="mini-day in-range">۱۴</span>
+          <span class="mini-day in-range">۱۵</span>
+          <span class="mini-day selected">۱۶</span>
+          <span class="mini-day">۱۷</span>
+          <span class="mini-day">۱۸</span>
+          <span class="mini-day">۱۹</span>
+          <span class="mini-day">۲۰</span>
+          <span class="mini-day today">۲۱</span>
+          <span class="mini-day">۲۲</span>
+          <span class="mini-day">۲۳</span>
+          <span class="mini-day">۲۴</span>
+          <span class="mini-day">۲۵</span>
+          <span class="mini-day">۲۶</span>
+          <span class="mini-day">۲۷</span>
+          <span class="mini-day">۲۸</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Glass Theme -->
+    <div class="theme-card glass animate-on-scroll">
+      <div class="theme-name">شیشه‌ای / Glass</div>
+      <div class="theme-calendar">
+        <div class="mini-cal-header">
+          <div class="arrows">
+            <button class="arrow">‹</button>
+            <button class="arrow">›</button>
+          </div>
+          <span>بهمن ۱۴۰۴</span>
+        </div>
+        <div class="mini-cal-weekdays">
+          <span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span>ج</span>
+        </div>
+        <div class="mini-cal-days">
+          <span class="mini-day" style="opacity:0.2">۲۸</span>
+          <span class="mini-day" style="opacity:0.2">۲۹</span>
+          <span class="mini-day" style="opacity:0.2">۳۰</span>
+          <span class="mini-day">۱</span>
+          <span class="mini-day">۲</span>
+          <span class="mini-day">۳</span>
+          <span class="mini-day">۴</span>
+          <span class="mini-day">۵</span>
+          <span class="mini-day">۶</span>
+          <span class="mini-day">۷</span>
+          <span class="mini-day selected">۸</span>
+          <span class="mini-day">۹</span>
+          <span class="mini-day">۱۰</span>
+          <span class="mini-day">۱۱</span>
+          <span class="mini-day">۱۲</span>
+          <span class="mini-day">۱۳</span>
+          <span class="mini-day">۱۴</span>
+          <span class="mini-day">۱۵</span>
+          <span class="mini-day">۱۶</span>
+          <span class="mini-day">۱۷</span>
+          <span class="mini-day">۱۸</span>
+          <span class="mini-day">۱۹</span>
+          <span class="mini-day">۲۰</span>
+          <span class="mini-day today">۲۱</span>
+          <span class="mini-day">۲۲</span>
+          <span class="mini-day">۲۳</span>
+          <span class="mini-day">۲۴</span>
+          <span class="mini-day">۲۵</span>
+          <span class="mini-day">۲۶</span>
+          <span class="mini-day">۲۷</span>
+          <span class="mini-day">۲۸</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Classic Theme -->
+    <div class="theme-card classic animate-on-scroll">
+      <div class="theme-name">کلاسیک / Dark</div>
+      <div class="theme-calendar">
+        <div class="mini-cal-header">
+          <div class="arrows">
+            <button class="arrow">‹</button>
+            <button class="arrow">›</button>
+          </div>
+          <span>بهمن ۱۴۰۴</span>
+        </div>
+        <div class="mini-cal-weekdays">
+          <span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span>ج</span>
+        </div>
+        <div class="mini-cal-days">
+          <span class="mini-day" style="opacity:0.2">۲۸</span>
+          <span class="mini-day" style="opacity:0.2">۲۹</span>
+          <span class="mini-day" style="opacity:0.2">۳۰</span>
+          <span class="mini-day">۱</span>
+          <span class="mini-day">۲</span>
+          <span class="mini-day">۳</span>
+          <span class="mini-day">۴</span>
+          <span class="mini-day">۵</span>
+          <span class="mini-day">۶</span>
+          <span class="mini-day in-range">۷</span>
+          <span class="mini-day in-range">۸</span>
+          <span class="mini-day selected">۹</span>
+          <span class="mini-day in-range">۱۰</span>
+          <span class="mini-day in-range">۱۱</span>
+          <span class="mini-day in-range">۱۲</span>
+          <span class="mini-day selected">۱۳</span>
+          <span class="mini-day">۱۴</span>
+          <span class="mini-day">۱۵</span>
+          <span class="mini-day">۱۶</span>
+          <span class="mini-day">۱۷</span>
+          <span class="mini-day">۱۸</span>
+          <span class="mini-day">۱۹</span>
+          <span class="mini-day">۲۰</span>
+          <span class="mini-day today">۲۱</span>
+          <span class="mini-day">۲۲</span>
+          <span class="mini-day">۲۳</span>
+          <span class="mini-day">۲۴</span>
+          <span class="mini-day">۲۵</span>
+          <span class="mini-day">۲۶</span>
+          <span class="mini-day">۲۷</span>
+          <span class="mini-day">۲۸</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CODE SECTION ═══ -->
+<section class="code-section" id="code">
+  <div class="code-grid">
+    <div class="code-content animate-on-scroll">
+      <h3>راه‌اندازی در چند ثانیه</h3>
+      <p>فقط یک فایل JS و یک فایل CSS اضافه کنید. بدون build step، بدون bundler، بدون پیکربندی پیچیده.</p>
+      <ul class="code-features-list">
+        <li><span class="check">✓</span>خروجی همزمان جلالی و میلادی</li>
+        <li><span class="check">✓</span>حالت Popover و Inline</li>
+        <li><span class="check">✓</span>انتخاب تک تاریخ و بازه‌ای</li>
+        <li><span class="check">✓</span>محدوده تاریخ (minDate / maxDate)</li>
+        <li><span class="check">✓</span>Callback برای همه رویدادها</li>
+        <li><span class="check">✓</span>API کامل با متدهای setValue, clear, destroy</li>
+      </ul>
+    </div>
+    <div class="code-block animate-on-scroll">
+      <div class="code-block-header">
+        <span class="code-dot red"></span>
+        <span class="code-dot yellow"></span>
+        <span class="code-dot green"></span>
+        <span class="code-block-title">app.js</span>
+      </div>
+      <pre><span class="comment">// 1. Popover mode — bind to input</span>
+<span class="keyword">const</span> dp = <span class="keyword">new</span> <span class="func">PardisDatepicker</span>(<span class="string">'#myInput'</span>, {
+  <span class="prop">outputFormat</span>: <span class="string">'both'</span>,
+  <span class="prop">onChange</span>: (<span class="prop">payload</span>) => {
+    payload.jalali.<span class="prop">formatted</span>
+    <span class="comment">// '1404/01/01'</span>
+    payload.gregorian.<span class="prop">formatted</span>
+    <span class="comment">// '2025-03-21'</span>
+    payload.<span class="prop">timestamp</span>
+    <span class="comment">// unix ms</span>
+  }
+});
+
+<span class="comment">// 2. Inline + Range mode</span>
+<span class="keyword">const</span> range = <span class="keyword">new</span> <span class="func">PardisDatepicker</span>(<span class="string">'#myDiv'</span>, {
+  <span class="prop">inline</span>: <span class="keyword">true</span>,
+  <span class="prop">rangeMode</span>: <span class="keyword">true</span>,
+  <span class="prop">onRangeSelect</span>: ({ <span class="prop">start</span>, <span class="prop">end</span> }) => {
+    console.<span class="func">log</span>(start, end);
+  }
+});
+
+<span class="comment">// 3. Set limits & navigate</span>
+dp.<span class="func">setOption</span>(<span class="string">'minDate'</span>, {
+  <span class="prop">jy</span>: <span class="number">1403</span>, <span class="prop">jm</span>: <span class="number">1</span>, <span class="prop">jd</span>: <span class="number">1</span>
+});
+dp.<span class="func">setValue</span>(<span class="number">1404</span>, <span class="number">6</span>, <span class="number">15</span>);
+dp.<span class="func">clear</span>();</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ API REFERENCE ═══ -->
+<section class="api-section" id="api">
+  <div class="api-container">
+    <div class="section-label animate-on-scroll">مستندات</div>
+    <h2 class="section-title animate-on-scroll">مرجع API</h2>
+    <p class="section-desc animate-on-scroll">همه optionها، متدها و ساختار خروجی</p>
+
+    <div class="animate-on-scroll">
+      <div class="api-tabs">
+        <button class="api-tab active" onclick="switchTab(this, 'options')">Options</button>
+        <button class="api-tab" onclick="switchTab(this, 'methods')">Methods</button>
+        <button class="api-tab" onclick="switchTab(this, 'payload')">Payload</button>
+        <button class="api-tab" onclick="switchTab(this, 'engine')">Engine</button>
+      </div>
+
+      <!-- Options Panel -->
+      <div class="api-panel active" id="panel-options">
+        <table class="api-table">
+          <thead><tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>inline</td><td>boolean</td><td>false</td><td class="desc-cell">نمایش همیشگی بدون input</td></tr>
+            <tr><td>rangeMode</td><td>boolean</td><td>false</td><td class="desc-cell">حالت انتخاب بازه</td></tr>
+            <tr><td>outputFormat</td><td>'both' | 'jalali' | 'gregorian'</td><td>'both'</td><td class="desc-cell">فرمت خروجی payload</td></tr>
+            <tr><td>initialYear</td><td>number</td><td>امسال</td><td class="desc-cell">سال اولیه نمایش تقویم</td></tr>
+            <tr><td>initialMonth</td><td>number</td><td>این ماه</td><td class="desc-cell">ماه اولیه نمایش تقویم</td></tr>
+            <tr><td>minDate</td><td>{jy, jm, jd}</td><td>null</td><td class="desc-cell">کمترین تاریخ قابل انتخاب</td></tr>
+            <tr><td>maxDate</td><td>{jy, jm, jd}</td><td>null</td><td class="desc-cell">بیشترین تاریخ قابل انتخاب</td></tr>
+            <tr><td>onChange</td><td>function</td><td>null</td><td class="desc-cell">Callback هنگام انتخاب تاریخ</td></tr>
+            <tr><td>onRangeStart</td><td>function</td><td>null</td><td class="desc-cell">Callback شروع انتخاب بازه</td></tr>
+            <tr><td>onRangeSelect</td><td>function</td><td>null</td><td class="desc-cell">Callback تکمیل انتخاب بازه</td></tr>
+            <tr><td>onClear</td><td>function</td><td>null</td><td class="desc-cell">Callback پاک کردن انتخاب</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Methods Panel -->
+      <div class="api-panel" id="panel-methods">
+        <table class="api-table">
+          <thead><tr><th>Method</th><th>Return</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>open()</td><td>void</td><td class="desc-cell">باز کردن popover تقویم</td></tr>
+            <tr><td>close()</td><td>void</td><td class="desc-cell">بستن popover تقویم</td></tr>
+            <tr><td>getValue()</td><td>payload | null</td><td class="desc-cell">دریافت آخرین تاریخ انتخاب‌شده</td></tr>
+            <tr><td>setValue(jy, jm, jd)</td><td>void</td><td class="desc-cell">انتخاب تاریخ به صورت برنامه‌نویسی</td></tr>
+            <tr><td>clear()</td><td>void</td><td class="desc-cell">پاک کردن انتخاب فعلی</td></tr>
+            <tr><td>setOption(key, value)</td><td>void</td><td class="desc-cell">تغییر option پس از ساخت instance</td></tr>
+            <tr><td>destroy()</td><td>void</td><td class="desc-cell">حذف کامل instance و event listeners</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Payload Panel -->
+      <div class="api-panel" id="panel-payload">
+        <div style="padding: 24px;">
+          <div class="code-block" style="box-shadow: none;">
+            <pre style="font-size: 0.82rem;">{
+  <span class="prop">jalali</span>: {
+    <span class="prop">year</span>: <span class="number">1404</span>,
+    <span class="prop">month</span>: <span class="number">1</span>,
+    <span class="prop">day</span>: <span class="number">1</span>,
+    <span class="prop">monthName</span>: <span class="string">'فروردین'</span>,
+    <span class="prop">formatted</span>: <span class="string">'1404/01/01'</span>,
+    <span class="prop">formattedPersian</span>: <span class="string">'۱۴۰۴/۰۱/۰۱'</span>,
+    <span class="prop">timestamp</span>: <span class="number">1742515200000</span>
+  },
+  <span class="prop">gregorian</span>: {
+    <span class="prop">year</span>: <span class="number">2025</span>,
+    <span class="prop">month</span>: <span class="number">3</span>,
+    <span class="prop">day</span>: <span class="number">21</span>,
+    <span class="prop">monthName</span>: <span class="string">'March'</span>,
+    <span class="prop">formatted</span>: <span class="string">'2025-03-21'</span>,
+    <span class="prop">date</span>: Date,
+    <span class="prop">timestamp</span>: <span class="number">1742515200000</span>
+  },
+  <span class="prop">iso</span>: <span class="string">'2025-03-21'</span>,
+  <span class="prop">timestamp</span>: <span class="number">1742515200000</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Engine Panel -->
+      <div class="api-panel" id="panel-engine">
+        <div style="padding: 24px;">
+          <div class="code-block" style="box-shadow: none;">
+            <pre style="font-size: 0.82rem;"><span class="comment">// Direct engine access</span>
+dp.engine.<span class="func">goToNextMonth</span>()
+dp.engine.<span class="func">goToPrevMonth</span>()
+dp.engine.<span class="func">goToNextYear</span>()
+dp.engine.<span class="func">goToPrevYear</span>()
+dp.engine.<span class="func">goToToday</span>()
+dp.engine.<span class="func">setViewMode</span>(<span class="string">'month'</span>)
+
+<span class="comment">// Listen to view changes</span>
+dp.engine.<span class="func">on</span>(<span class="string">'viewChange'</span>, (info) => {
+  info.<span class="prop">year</span>
+  info.<span class="prop">month</span>
+  info.<span class="prop">monthName</span>
+  info.<span class="prop">viewMode</span>
+})
+
+<span class="comment">// Static date conversion</span>
+<span class="keyword">const</span> p = PardisEngine.<span class="func">buildDatePayload</span>(
+  <span class="number">1404</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="string">'both'</span>
+);</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA ═══ -->
+<section class="cta">
+  <h2 class="animate-on-scroll">آماده استفاده هستید؟</h2>
+  <p class="animate-on-scroll">
+    در کمتر از یک دقیقه تقویم شمسی حرفه‌ای را به پروژه خود اضافه کنید.
+  </p>
+  <div class="hero-actions animate-on-scroll" style="justify-content: center;">
+    <a href="#code" class="btn-primary">
+      شروع کنید
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l-7 7 7 7"/></svg>
+    </a>
+    <a href="https://github.com" class="btn-secondary" target="_blank">
+      مشاهده در GitHub
+    </a>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="footer">
+  <div class="footer-brand">Pardis Jalali Datepicker — ساخته‌شده با ❤️</div>
+  <ul class="footer-links">
+    <li><a href="https://github.com" target="_blank">GitHub</a></li>
+    <li><a href="#api">مستندات</a></li>
+    <li><a href="#features">ویژگی‌ها</a></li>
+  </ul>
+</footer>
+
+<script>
+// ═══ Copy install command ═══
+function copyInstall() {
+  const cmd = document.getElementById('installCmd').textContent;
+  navigator.clipboard.writeText(cmd).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = 'کپی شد!';
+    setTimeout(() => btn.textContent = 'کپی', 2000);
+  });
+}
+
+// ═══ API Tabs ═══
+function switchTab(btn, panelId) {
+  document.querySelectorAll('.api-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.api-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + panelId).classList.add('active');
+}
+
+// ═══ Scroll Animations ═══
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+
+// ═══ Smooth nav background on scroll ═══
+window.addEventListener('scroll', () => {
+  const nav = document.querySelector('.nav');
+  if (window.scrollY > 60) {
+    nav.style.boxShadow = '0 4px 20px rgba(0,0,0,0.06)';
+  } else {
+    nav.style.boxShadow = 'none';
+  }
+});
+</script>
+</body>
+</html>
