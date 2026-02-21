@@ -4,6 +4,18 @@ A modern, zero-dependency Persian (Jalali/Shamsi) datepicker built with a headle
 
 ---
 
+## Screenshots
+
+| Popover — Single Date | Popover — Range Selection |
+|---|---|
+| ![Modern theme, single date picker](demo/images/image-01.png) | ![Modern theme, range selection](demo/images/image-02.png) |
+
+**Inline Mode — Glassmorphism Theme**
+
+![Inline mode with glass theme showing two side-by-side calendars](demo/images/image-03.png)
+
+---
+
 ## Features
 
 - **Zero dependencies** — pure vanilla JS, no external libraries
