@@ -8,11 +8,11 @@ A modern, zero-dependency Persian (Jalali/Shamsi) datepicker built with a headle
 
 | Popover — Single Date | Popover — Range Selection |
 |---|---|
-| ![Modern theme, single date picker](demo/images/image-01.png) | ![Modern theme, range selection](demo/images/image-02.png) |
+| ![Modern theme, single date picker](https://raw.githubusercontent.com/alirezakariminejad/Pardis-Jalali-Datepicker/main/demo/images/image-01.png) | ![Modern theme, range selection](https://raw.githubusercontent.com/alirezakariminejad/Pardis-Jalali-Datepicker/main/demo/images/image-02.png) |
 
 **Inline Mode — Glassmorphism Theme**
 
-![Inline mode with glass theme showing two side-by-side calendars](demo/images/image-03.png)
+![Inline mode with glass theme showing two side-by-side calendars](https://raw.githubusercontent.com/alirezakariminejad/Pardis-Jalali-Datepicker/main/demo/images/image-03.png)
 
 ---
 
@@ -71,7 +71,17 @@ Include the library files and create a datepicker on any `<input>`:
 
 ## Installation
 
-No package manager required. Copy `lib/pardis-jalali-datepicker.js` and `lib/pardis-jalali-datepicker.css` into your project and include them directly.
+### npm
+
+```bash
+npm install pardis-jalali-datepicker
+```
+
+### Manual
+
+Copy `lib/pardis-jalali-datepicker.js` and `lib/pardis-jalali-datepicker.css` into your project and include them directly.
+
+> **Note:** The library uses the `Vazirmatn` font by default (via CSS variable `--pardis-font`). Load it yourself (e.g. from Google Fonts) or override the variable with your preferred font.
 
 ---
 
@@ -104,7 +114,7 @@ No package manager required. Copy `lib/pardis-jalali-datepicker.js` and `lib/par
 | `dp.getValue()` | Returns the current date payload, or `null` if nothing is selected |
 | `dp.setValue(jy, jm, jd)` | Programmatically select a Jalali date |
 | `dp.clear()` | Clear the current selection |
-| `dp.setOption(key, value)` | Update an option after construction (supports `rangeMode`, `outputFormat`) |
+| `dp.setOption(key, value)` | Update an option after construction (currently supports `rangeMode` and `outputFormat` only) |
 | `dp.destroy()` | Remove all event listeners and DOM elements created by this instance |
 
 Access the underlying engine directly via `dp.engine` for advanced use.
