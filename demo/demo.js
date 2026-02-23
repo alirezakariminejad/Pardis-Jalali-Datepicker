@@ -3,49 +3,10 @@
    ================================================================ */
 (() => {
   const themeSwitcher = document.getElementById('themeSwitcher');
-  const eventLogItems = document.getElementById('eventLogItems');
-
-  // ── Event Log ──
+  // ── Event Log (no-op if Dev Panel is removed; playground has its own log) ──
   function logEvent(tag, label, payload) {
-    // Remove empty state
-    const empty = eventLogItems.querySelector('.dev-log-empty');
-    if (empty) empty.remove();
-
-    const item = document.createElement('div');
-    item.className = 'dev-log-item';
-
-    const json = payload !== undefined
-      ? JSON.stringify(payload, (k, v) => v instanceof Date ? v.toISOString() : v, 2)
-      : null;
-
-    item.innerHTML = `
-      <div class="dev-log-row">
-        <span class="tag ${tag}">${tag}</span>
-        <span class="dev-log-label">${label}</span>
-        <span class="dev-log-time">${new Date().toLocaleTimeString('fa-IR')}</span>
-      </div>
-      ${json ? `<pre class="dev-log-payload">${json}</pre>` : ''}
-    `;
-
-    // toggle payload visibility on click
-    const pre = item.querySelector('.dev-log-payload');
-    if (pre) {
-      pre.style.display = 'none';
-      item.querySelector('.dev-log-row').style.cursor = 'pointer';
-      item.querySelector('.dev-log-row').addEventListener('click', () => {
-        pre.style.display = pre.style.display === 'none' ? 'block' : 'none';
-      });
-    }
-
-    eventLogItems.prepend(item);
-    while (eventLogItems.children.length > 12) {
-      eventLogItems.removeChild(eventLogItems.lastChild);
-    }
+    // Intentionally empty — playground.js handles event logging
   }
-
-  document.getElementById('clearLogBtn').addEventListener('click', () => {
-    eventLogItems.innerHTML = '<div class="dev-log-empty">هنوز رویدادی ثبت نشده — یک تاریخ انتخاب کنید</div>';
-  });
 
   // ── Helper ──
   function jalaliOf(p) {
@@ -135,6 +96,13 @@
         document.documentElement.removeAttribute('data-pardis-theme');
       }
       document.body.className = config.body;
+      // Sync playground theme cards
+      document.querySelectorAll('.pg-theme-card').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-checked', 'false');
+      });
+      const pgMatch = document.querySelector(`.pg-theme-card[data-theme="${theme}"]`);
+      if (pgMatch) { pgMatch.classList.add('active'); pgMatch.setAttribute('aria-checked', 'true'); }
       logEvent('view', `تم: ${theme}`);
     });
   });
