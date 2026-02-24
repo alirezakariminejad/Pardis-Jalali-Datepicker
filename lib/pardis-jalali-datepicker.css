@@ -573,3 +573,49 @@
     max-width: 100%;
   }
 }
+
+/* ── Screen-reader only utility ── */
+.pardis-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Highlighted dates ── */
+.pardis-day.highlighted {
+  background: color-mix(in srgb, var(--pardis-primary) 15%, transparent);
+  border-radius: 50%;
+}
+
+/* ── Preset range buttons ── */
+.pardis-preset-ranges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.pardis-preset-btn {
+  font-family: var(--pardis-font);
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  border: 1px solid var(--pardis-border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--pardis-text);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.pardis-preset-btn:hover {
+  background: var(--pardis-primary);
+  color: #fff;
+  border-color: var(--pardis-primary);
+}

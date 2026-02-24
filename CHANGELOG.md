@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [1.1.0] - 2026-02-24
+
+### Added
+- `disabledDates` option: accepts an array of `{jy,jm,jd}` objects or a predicate function `(jy,jm,jd) => boolean` to disable specific dates.
+- `highlightedDates` option: accepts an array of `{jy,jm,jd,className?}` objects to mark dates with a custom CSS class (defaults to `highlighted`).
+- `maxRange` option: enforces a maximum number of days selectable in range mode; oversized selections are silently rejected.
+- `numeralType` option: `'persian'` (default) renders all numbers in Persian digits (۰–۹); `'latin'` renders Latin digits throughout the calendar.
+- Preset range buttons in range mode footer: هفته جاری, ماه جاری, ۷ روز گذشته, ۳۰ روز گذشته.
+- Swipe gesture support: `pointerdown`/`pointerup` on the calendar element triggers prev/next month navigation on horizontal swipes > 40px.
+- Full keyboard navigation in day view: Arrow keys (day/week), PageUp/PageDown (month), Shift+PageUp/PageDown (year), Home/End (week boundaries), T (today), Enter/Space (select).
+- Keyboard navigation in month/year grid views: Arrow keys to move focus, Enter/Space to select.
+- ARIA roles and attributes: `role=dialog`/`aria-modal` on popover, `role=grid`/`role=gridcell` on calendar days, `aria-selected`, `aria-disabled`, `aria-label` (full Persian date string) on every day cell, `aria-label` on nav buttons, `aria-expanded` on trigger input, `aria-describedby` pointing to format hint, `role=columnheader` on weekday headers.
+- `.pardis-sr-only` CSS utility class for screen-reader-only content.
+- CSS styles for `.highlighted` days and `.pardis-preset-btn` preset range buttons.
+
 ## [1.0.2] - 2026-02-23
 
 ### Fixed
