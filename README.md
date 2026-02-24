@@ -22,12 +22,17 @@ A modern, zero-dependency Persian (Jalali/Shamsi) datepicker built with a headle
 - **Headless architecture** — engine, renderer, and input mask are fully decoupled
 - **Multi-instance** — any number of independent pickers on one page
 - **Inline mode** — always-visible calendar without an input field
-- **Range selection** — pick a start and end date with hover preview
+- **Range selection** — pick a start and end date with hover preview, preset ranges, and max-range enforcement
 - **Input masking** — auto-formats Persian digits with slash separators
 - **Three themes** — Modern, Glassmorphism, Classic/Dark
 - **Dual output** — returns both Jalali and Gregorian date data simultaneously
 - **Precise conversion** — correct Jalaali ↔ Gregorian algorithm (integer division, not `Math.floor`)
 - **RTL** — fully right-to-left layout
+- **Accessibility** — ARIA roles, full keyboard navigation (arrows, PageUp/Down, Home/End, T), screen-reader announcements
+- **Touch & swipe** — swipe left/right to navigate months on touch devices
+- **disabledDates** — disable specific dates via array or predicate function
+- **highlightedDates** — mark dates with custom CSS classes (holidays, events, etc.)
+- **numeralType** — render digits in Persian (۰–۹) or Latin (0–9)
 
 ---
 
@@ -98,6 +103,10 @@ Copy `lib/pardis-jalali-datepicker.js` and `lib/pardis-jalali-datepicker.css` in
 | `initialMonth` | `number` | current month | Jalali month (1–12) to display on first render |
 | `minDate` | `{jy, jm, jd}` | `null` | Earliest selectable date |
 | `maxDate` | `{jy, jm, jd}` | `null` | Latest selectable date |
+| `disabledDates` | `{jy,jm,jd}[]` \| `(jy,jm,jd) => boolean` | `null` | Dates to disable — accepts an array of date objects or a predicate function |
+| `highlightedDates` | `{jy,jm,jd,className?}[]` | `null` | Dates to highlight with a custom CSS class (defaults to `'highlighted'`) |
+| `maxRange` | `number` | `null` | Maximum number of days allowed in a range selection |
+| `numeralType` | `'persian'` \| `'latin'` | `'persian'` | Digit style rendered in the calendar — Persian (۰–۹) or Latin (0–9) |
 | `onChange` | `function` | `null` | Called when a single date is selected. Receives a [date payload](#date-payload) |
 | `onRangeStart` | `function` | `null` | Called when the first date of a range is picked. Receives a [date payload](#date-payload) |
 | `onRangeSelect` | `function` | `null` | Called when both range dates are selected. Receives `{ start, end }` where each is a [date payload](#date-payload) |
@@ -216,6 +225,81 @@ const dp = new PardisDatepicker('#input', {
   onChange: (payload) => console.log(payload)
 });
 ```
+
+### Disabled Dates
+
+```js
+// Disable specific dates (array)
+const dp = new PardisDatepicker('#input', {
+  disabledDates: [
+    { jy: 1404, jm: 1, jd: 13 }, // Sizdah Be-dar
+    { jy: 1404, jm: 1, jd: 1  }, // Nowruz
+  ],
+  onChange: (payload) => console.log(payload)
+});
+
+// Disable dates with a predicate (e.g. disable all Fridays)
+const dp2 = new PardisDatepicker('#input2', {
+  disabledDates: (jy, jm, jd) => {
+    const { gy, gm, gd } = PardisEngine.buildDatePayload(jy, jm, jd, 'gregorian');
+    return new Date(gy, gm - 1, gd).getDay() === 5; // Friday
+  },
+});
+```
+
+### Highlighted Dates
+
+```js
+const dp = new PardisDatepicker('#input', {
+  highlightedDates: [
+    { jy: 1404, jm: 1, jd: 1,  className: 'holiday' },  // custom class
+    { jy: 1404, jm: 1, jd: 13 },                        // uses default 'highlighted' class
+  ],
+  onChange: (payload) => console.log(payload)
+});
+```
+
+```css
+/* Style your highlighted dates */
+.pardis-day.holiday { background: #ffeeba; border-radius: 50%; }
+```
+
+### Range with Max Length and Presets
+
+```js
+const dp = new PardisDatepicker('#input', {
+  rangeMode: true,
+  maxRange: 30,  // reject selections longer than 30 days
+  onRangeSelect: ({ start, end }) => {
+    console.log(start.jalali.formatted, '→', end.jalali.formatted);
+  }
+});
+// Preset buttons (هفته جاری, ماه جاری, ۷ روز گذشته, ۳۰ روز گذشته)
+// appear automatically in the footer when rangeMode is true.
+```
+
+### Latin Numerals
+
+```js
+const dp = new PardisDatepicker('#input', {
+  numeralType: 'latin',  // render 1 2 3 instead of ۱ ۲ ۳
+  onChange: (payload) => console.log(payload)
+});
+```
+
+### Keyboard Navigation
+
+When the calendar is open, the following keys work in day view:
+
+| Key | Action |
+|-----|--------|
+| Arrow keys | Move focus one day (←→) or one week (↑↓) |
+| Page Up / Page Down | Previous / next month |
+| Shift + Page Up / Down | Previous / next year |
+| Home / End | First / last day of the current week row |
+| T | Jump to today |
+| Enter / Space | Select the focused date |
+| Escape | Close the picker |
 
 ### Programmatic Control
 
