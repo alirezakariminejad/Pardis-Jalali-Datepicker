@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(brew list:*)",
+      "Read(//opt/homebrew/bin/**)",
+      "Bash(git checkout -b phase4-architecture)",
+      "Bash(npm install --save-dev tsup)",
+      "Bash(npm run build)",
+      "Bash(npm install --save-dev typescript)",
+      "Bash(node --input-type=module -e \"import { PardisDatepicker } from ''./dist/index.mjs''; console.log\\(typeof PardisDatepicker\\);\")",
+      "Bash(node --input-type=module -e \"import { PardisDatepicker } from ''./dist/index.mjs''; console.log\\(''ESM:'', typeof PardisDatepicker\\);\")",
+      "Bash(gh auth status)",
+      "Bash(git checkout main)",
+      "Bash(git merge:*)",
+      "Bash(git tag -a v2.0.0 -m \"v2.0.0\")",
+      "Bash(npm whoami)",
+      "Bash(npm view pardis-jalali-datepicker version)",
+      "Bash(git check-ignore -q .worktrees)",
+      "Bash(git worktree add .worktrees/v2.0.1-patch -b v2.0.1-patch)",
+      "Bash(npm install)",
+      "Bash(git worktree add .worktrees/v2.0.1-patch v2.0.1-patch)",
+      "Bash(git worktree add .worktrees/v2.0.1-patch -b v2.0.1-patch-work)"
+    ]
+  }
+}
