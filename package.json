@@ -1,6 +1,6 @@
 {
   "name": "pardis-jalali-datepicker",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "A modern, zero-dependency Persian (Jalali/Shamsi) datepicker — multi-instance, inline mode, range selection, input masking, and three built-in themes.",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
