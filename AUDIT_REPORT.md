@@ -1,5 +1,164 @@
 # Audit Report
 
+## 2026-02-26
+
+### Summary
+
+Full repository audit of **pardis-jalali-datepicker** at version **2.0.0** (tag `v2.0.0`). This is a major release introducing a `tsup` build pipeline, ESM/CJS/IIFE output, hand-authored TypeScript declarations, and an `aria-labelledby` accessibility fix. All findings from the v1.1.0 audit have been resolved. The code quality and date-math correctness remain high. However, the v2.0.0 release introduced two regressions: `demo.html` now fails in-browser (loads the ES-module `lib/` file via a plain `<script>` tag), and there is a preset-name mismatch in `getPresetRange()` between the TypeScript definition/README and the JS implementation. Additionally, the TypeScript declaration file has several gaps. No Critical findings other than the broken demo.
+
+---
+
+### Strengths
+
+- **All v1.1.0 / v1.2.0 bugs resolved** — `goToToday()` disabled-date guard, `_focusDayOffset()` JDN boundary clamp, `getPresetRange('thisWeek')` JDN clamp, `disabledDates` README example, range-input focus-clear listener all implemented and confirmed correct.
+- **Proper ESM-first build** — Named exports (`export { PardisDatepicker, PardisEngine, JalaaliUtil }`) at the bottom of `lib/` allow tsup to generate correct named exports in all three formats. CJS and ESM both verified to return `typeof PardisDatepicker === 'function'`.
+- **Clean package.json** — `"exports"` map with `"types"` condition first, `"main"` → `dist/index.cjs`, `"module"` → `dist/index.mjs`, `"types"` → `dist/index.d.ts`, `"files"` includes both `lib/` and `dist/`. `sideEffects`, `engines`, correct.
+- **CSS still clean** — No global resets, no `@font-face`, no `@import`. All selectors prefixed `.pardis-*`.
+- **Release hygiene** — All six version tags (`v1.0.1`–`v2.0.0`) present and annotated. CHANGELOG follows Keep a Changelog. Conventional commit messages throughout.
+- **Test suite updated** — `scripts/year-boundary-test.js` correctly switched to `require('../dist/index.cjs')` after lib/ became an ES module.
+- **Accessibility improvement** — `PardisDatepicker._counter` static property, `_headingId` threaded through `PardisRenderer` options, all three view heading divs stamped with `id="${headingId}"`, popover uses `aria-labelledby` instead of redundant `aria-label`.
+
+---
+
+### Findings
+
+#### Critical
+
+**C1 — `demo.html` loads ES module via plain `<script>` tag (demo is broken)**
+- **Severity:** Critical
+- **Evidence:** `demo.html` line 378: `<script src="lib/pardis-jalali-datepicker.js"></script>`. As of v2.0.0, `lib/pardis-jalali-datepicker.js` ends with `export { ... }`, making it an ES module. A plain `<script>` tag treats the file as a classic script and silently fails to expose any globals. `demo/demo.js` line 37 then calls `new PardisDatepicker(...)` → `ReferenceError: PardisDatepicker is not defined`.
+- **Impact:** The GitHub Pages demo / local demo is completely non-functional.
+- **Fix:** Replace `demo.html` line 378 with `<script src="dist/index.global.js"></script>` (IIFE build; global is `window.PardisJalaliDatepicker`). Update any inline `new PardisDatepicker(...)` calls in demo scripts to destructure: `const { PardisDatepicker } = PardisJalaliDatepicker;`.
+
+---
+
+#### High
+
+**H1 — `getPresetRange()` preset names mismatch between TS definition, README, and JS implementation**
+- **Severity:** High
+- **Evidence:**
+  - `lib/pardis-jalali-datepicker.d.ts` line 40: `getPresetRange(name: 'thisWeek' | 'thisMonth' | 'last7Days' | 'last30Days'): DateRange;`
+  - `README.md` — documents `'last7Days'` and `'last30Days'`
+  - `lib/pardis-jalali-datepicker.js` lines 560, 563: checks `preset === 'last7'` and `preset === 'last30'`
+- **Impact:** Callers using the documented names `'last7Days'` / `'last30Days'` receive `undefined` silently (no case matched, no error thrown, method returns nothing).
+- **Fix:** Rename in JS from `'last7'` → `'last7Days'` and `'last30'` → `'last30Days'` (align implementation to the public API contract already declared in TS and docs). Update `getPresetRange()` in `lib/pardis-jalali-datepicker.js` at lines 560 and 563.
+
+**H2 — `JalaaliUtil` and `PardisEngine` exported from JS but absent from TypeScript declarations**
+- **Severity:** High
+- **Evidence:** `lib/pardis-jalali-datepicker.js` line 1469: `export { PardisDatepicker, PardisEngine, JalaaliUtil }`. `lib/pardis-jalali-datepicker.d.ts` declares only `PardisDatepicker` and its supporting interfaces — no `JalaaliUtil` or `PardisEngine` types.
+- **Impact:** TypeScript users importing `{ JalaaliUtil }` from the package get type `any` or a compile error; no IntelliSense for `toGregorian()`, `j2d()`, etc. — despite the README recommending their use in `disabledDates` callbacks.
+- **Fix:** Add minimal declarations to `lib/pardis-jalali-datepicker.d.ts`:
+  ```ts
+  export declare const JalaaliUtil: {
+    toGregorian(jy: number, jm: number, jd: number): { gy: number; gm: number; gd: number };
+    j2d(jy: number, jm: number, jd: number): number;
+    d2j(jdn: number): { jy: number; jm: number; jd: number };
+    jalaaliMonthLength(jy: number, jm: number): number;
+    isLeapJalaaliYear(jy: number): boolean;
+  };
+  export declare class PardisEngine {
+    static readonly MIN_YEAR: number;
+    static readonly MAX_YEAR: number;
+    static buildDatePayload(jy: number, jm: number, jd: number, format: string): object;
+    static formatNum(n: number, type: 'persian' | 'latin'): string;
+  }
+  ```
+
+**H3 — `README.md` Quick Start example still loads `lib/` as a plain script**
+- **Severity:** High
+- **Evidence:** `README.md` lines 58–73 (Quick Start section): `<script src="lib/pardis-jalali-datepicker.js"></script>`. This contradicts the migration warning added on lines 109–126 of the same file.
+- **Impact:** The very first code example a new user sees is broken. Produces a `ReferenceError` in browser.
+- **Fix:** Replace the Quick Start script tag with `<script src="dist/index.global.js"></script>` and add `const { PardisDatepicker } = PardisJalaliDatepicker;` before the `new PardisDatepicker(...)` call. Ensure internal consistency with the migration note lower in the file.
+
+---
+
+#### Medium
+
+**M1 — `setValue()` TypeScript signature accepts `JalaliDate` object but JS implementation takes three arguments**
+- **Severity:** Medium
+- **Evidence:** `lib/pardis-jalali-datepicker.d.ts` line 34: `setValue(date: JalaliDate): void`. `lib/pardis-jalali-datepicker.js` line 1409: `setValue(jy, jm, jd)`.
+- **Impact:** TypeScript callers follow the type and pass an object; at runtime the method receives the object as `jy` and `jm`/`jd` are `undefined`. The call silently does nothing.
+- **Fix:** Change TS definition to `setValue(jy: number, jm: number, jd: number): void`.
+
+**M2 — `clear()` method exists in JS but missing from TypeScript declaration**
+- **Severity:** Medium
+- **Evidence:** `lib/pardis-jalali-datepicker.js` line 1414: `clear()` method defined and mentioned in README. Not present in `lib/pardis-jalali-datepicker.d.ts`.
+- **Impact:** TypeScript users cannot call `dp.clear()` without a type error; IntelliSense doesn't surface it.
+- **Fix:** Add `clear(): void;` to the `PardisDatepicker` class in `lib/pardis-jalali-datepicker.d.ts`.
+
+**M3 — `mobileMode` in `PardisOptions` TS type has no JS implementation**
+- **Severity:** Medium
+- **Evidence:** `lib/pardis-jalali-datepicker.d.ts` line 16: `mobileMode?: boolean`. Searching `lib/pardis-jalali-datepicker.js` — the option is stored in `this.options` at constructor (line 1093) but never read or acted on anywhere in the source.
+- **Impact:** TypeScript users can pass `mobileMode: true` expecting different behaviour; nothing happens.
+- **Fix:** Either implement the option or remove it from the TS declaration (and from the constructor defaults in JS) with a note in CHANGELOG under `Removed`.
+
+**M4 — `dist/` is not in `.gitignore` in practice; dist files are committed**
+- **Severity:** Medium
+- **Evidence:** `.gitignore` line 5: `dist/`. However, running `git ls-files dist/` shows the `dist/` directory IS tracked (added to git as part of v2.0.0 release). The `.gitignore` entry is being overridden by the explicit `git add`.
+- **Impact:** Build artifacts (generated files) are committed to git, bloating repo history, causing merge conflicts when different developers build. The `npm publish` flow requires `dist/` to exist at publish time — it should be built fresh then, not stored in git.
+- **Fix (two options):**
+  - **Option A (recommended):** Remove `dist/` from git tracking (`git rm -r --cached dist/`), keep it in `.gitignore`, and add a `prepublishOnly` script: `"prepublishOnly": "npm run build"`.
+  - **Option B:** Remove `dist/` from `.gitignore` and commit it intentionally — but document this decision.
+
+---
+
+#### Low
+
+**L1 — CHANGELOG v2.0.0 does not document the `getPresetRange` preset-name bug**
+- **Severity:** Low
+- **Evidence:** The `[2.0.0]` CHANGELOG section does not mention that `'last7Days'`/`'last30Days'` are undocumented aliases for `'last7'`/`'last30'`.
+- **Fix:** Add to `[2.0.0]` Known Issues or document when fixed in the patch release.
+
+**L2 — `tsup` and `typescript` are both devDependencies but `typescript` is an undocumented peer requirement of tsup**
+- **Severity:** Low
+- **Evidence:** `package.json` devDependencies: `"tsup": "^8.5.1"`, `"typescript": "^5.9.3"`. tsup requires typescript as a peer (confirmed during build when it threw `Cannot find module 'typescript'`). This is not documented in contributing guidelines.
+- **Fix:** Add a `CONTRIBUTING.md` note or package.json `peerDependenciesMeta` clarification. Low risk since both are listed as devDeps.
+
+**L3 — No `prepublishOnly` build hook**
+- **Severity:** Low
+- **Evidence:** `package.json` `scripts` has `"build"` and `"test"` but no `"prepublishOnly"`. If a developer runs `npm publish` without first running `npm run build`, they may publish stale or missing `dist/` files.
+- **Fix:** Add `"prepublishOnly": "npm run build"` to `package.json`.
+
+**L4 — `dist/index.global.js` global structure not fully documented in README**
+- **Severity:** Low
+- **Evidence:** README Installation section states `const { PardisDatepicker } = PardisJalaliDatepicker` but does not document that `PardisEngine` and `JalaaliUtil` are also available as `PardisJalaliDatepicker.PardisEngine` etc. via the IIFE build.
+- **Fix:** Add a note to the CDN section listing the full exported shape: `{ PardisDatepicker, PardisEngine, JalaaliUtil }`.
+
+---
+
+### Recommended Fix Plan
+
+1. **[C1] Fix `demo.html`** — Change script tag to `<script src="dist/index.global.js">`, update demo scripts to destructure `PardisJalaliDatepicker`.
+2. **[H3] Fix `README.md` Quick Start** — Replace `lib/` script tag with `dist/index.global.js`; add destructure line.
+3. **[H1] Fix `getPresetRange()` preset names in JS** — Rename `'last7'` → `'last7Days'` and `'last30'` → `'last30Days'` in `lib/pardis-jalali-datepicker.js` lines 560 and 563.
+4. **[M1] Fix `setValue()` TS signature** — Change to `setValue(jy: number, jm: number, jd: number): void` in `lib/pardis-jalali-datepicker.d.ts`.
+5. **[M2] Add `clear()` to TS declaration** — `clear(): void;` in `PardisDatepicker` class.
+6. **[H2] Add `JalaaliUtil` and `PardisEngine` TS declarations** — As shown in H2 fix above.
+7. **[M3] Resolve `mobileMode`** — Remove from TS and JS constructor defaults, or implement.
+8. **[L3] Add `prepublishOnly`** — `"prepublishOnly": "npm run build"` in `package.json`.
+9. **[M4] Decide on `dist/` git tracking** — Recommended: untrack, add `prepublishOnly`.
+10. **[L4] Document IIFE global shape** in README CDN section.
+
+Release these fixes as **v2.0.1** (patch).
+
+---
+
+### Verification Checklist
+
+- [ ] `demo.html` loads in browser without `ReferenceError`
+- [ ] `new PardisDatepicker(...)` works from IIFE global `PardisJalaliDatepicker.PardisDatepicker`
+- [ ] `getPresetRange('last7Days')` returns a valid `DateRange` (not `undefined`)
+- [ ] `getPresetRange('last30Days')` returns a valid `DateRange` (not `undefined`)
+- [ ] TypeScript: `import { JalaaliUtil, PardisEngine } from 'pardis-jalali-datepicker'` compiles without error under `strict: true`
+- [ ] TypeScript: `dp.setValue(1402, 1, 1)` compiles (three-arg signature)
+- [ ] TypeScript: `dp.clear()` compiles (method present in declaration)
+- [ ] README Quick Start works copy-paste in a fresh browser tab
+- [ ] `npm run build` produces all four `dist/` files cleanly
+- [ ] `npm test` passes
+- [ ] `git tag` shows `v2.0.1` after patch release
+
+---
+
 ## 2026-02-24
 
 ### Summary
