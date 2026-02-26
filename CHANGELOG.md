@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [2.0.0] - 2026-02-26
+
+### Added
+- ESM (`dist/index.mjs`), CJS (`dist/index.cjs`), and IIFE (`dist/index.global.js`) build output via `tsup`.
+- `package.json` `"exports"` map, `"module"` field, and `"types"` field pointing to `dist/`.
+- Full TypeScript declaration file (`lib/pardis-jalali-datepicker.d.ts`) exporting `JalaliDate`, `DateRange`, `PardisOptions`, and `PardisDatepicker`.
+
+### Fixed
+- `aria-labelledby` added to `role="dialog"` popover, pointing to the month/year heading with an instance-scoped ID (`pardis-heading-N`). Removes the previous redundant `aria-label`.
+
+### Changed
+- `lib/pardis-jalali-datepicker.js` is now an ES module (has `export` statements). Plain `<script src="lib/...">` (non-module) no longer works — use `<script src="dist/index.global.js">` for CDN/browser-global usage.
+- `package.json` `"main"` entry moved from `lib/pardis-jalali-datepicker.js` to `./dist/index.cjs`.
+- `"files"` in `package.json` now publishes the entire `lib/` directory and `dist/`.
+- `npm test` now runs against `dist/index.cjs` instead of eval-loading `lib/` directly.
+
+### BREAKING CHANGES
+- **CDN `<script>` users:** Replace `<script src="lib/pardis-jalali-datepicker.js">` with `<script src="dist/index.global.js">`. The global is now `PardisJalaliDatepicker.PardisDatepicker` (or destructure: `const { PardisDatepicker } = PardisJalaliDatepicker`).
+- **Bundler users:** `require('pardis-jalali-datepicker')` now resolves to `dist/index.cjs`. Named imports work: `import { PardisDatepicker } from 'pardis-jalali-datepicker'`.
+- The `"exports"` field blocks deep imports (e.g. `require('pardis-jalali-datepicker/lib/...')`).
+
 ## [1.2.0] - 2026-02-24
 
 ### Added

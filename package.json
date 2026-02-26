@@ -1,16 +1,34 @@
 {
   "name": "pardis-jalali-datepicker",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "A modern, zero-dependency Persian (Jalali/Shamsi) datepicker — multi-instance, inline mode, range selection, input masking, and three built-in themes.",
-  "main": "lib/pardis-jalali-datepicker.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
   "style": "lib/pardis-jalali-datepicker.css",
+  "files": [
+    "lib",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "scripts": {
+    "build": "tsup && cp lib/pardis-jalali-datepicker.d.ts dist/index.d.ts",
     "test": "node scripts/year-boundary-test.js"
   },
-  "files": [
-    "lib/pardis-jalali-datepicker.js",
-    "lib/pardis-jalali-datepicker.css"
-  ],
   "keywords": [
     "datepicker",
     "jalali",
@@ -34,5 +52,9 @@
   "homepage": "https://alirezakariminejad.github.io/Pardis-Jalali-Datepicker/",
   "bugs": {
     "url": "https://github.com/alirezakariminejad/Pardis-Jalali-Datepicker/issues"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
   }
 }

@@ -1,14 +1,5 @@
-const fs = require('fs');
-
-// Load the library file in a Node environment (no DOM needed for PardisEngine/JalaaliUtil)
-const lib = fs.readFileSync(require('path').join(__dirname, '..', 'lib', 'pardis-jalali-datepicker.js'), 'utf8');
-
-// Evaluate library in current context
-// eslint-disable-next-line no-new-func
-new Function(lib + '\n;globalThis.__PardisEngine = PardisEngine; globalThis.__JalaaliUtil = JalaaliUtil;')();
-
-const PardisEngine = globalThis.__PardisEngine;
-const JalaaliUtil = globalThis.__JalaaliUtil;
+// Load from the CJS build (lib/ is now an ES module and cannot be eval'd via new Function)
+const { PardisEngine, JalaaliUtil } = require('../dist/index.cjs');
 
 function assert(cond, msg) {
   if (!cond) throw new Error(msg);

@@ -82,11 +82,47 @@ Include the library files and create a datepicker on any `<input>`:
 npm install pardis-jalali-datepicker
 ```
 
-### Manual
+### CDN / Browser global
 
-Copy `lib/pardis-jalali-datepicker.js` and `lib/pardis-jalali-datepicker.css` into your project and include them directly.
+Use the IIFE build from `dist/`:
+
+```html
+<script src="dist/index.global.js"></script>
+<link rel="stylesheet" href="lib/pardis-jalali-datepicker.css">
+<script>
+  const { PardisDatepicker } = PardisJalaliDatepicker;
+  new PardisDatepicker('#myInput', { /* options */ });
+</script>
+```
 
 > **Note:** The library uses the `Vazirmatn` font by default (via CSS variable `--pardis-font`). Load it yourself (e.g. from Google Fonts) or override the variable with your preferred font.
+
+### ESM / Bundler (Vite, webpack, etc.)
+
+```js
+import { PardisDatepicker } from 'pardis-jalali-datepicker';
+import 'pardis-jalali-datepicker/lib/pardis-jalali-datepicker.css';
+```
+
+---
+
+### ⚠️ Migrating from v1.x
+
+In v2.0.0 the `lib/` source file became an ES module. If you were using:
+
+```html
+<!-- ❌ No longer works as a plain <script> tag -->
+<script src="lib/pardis-jalali-datepicker.js"></script>
+```
+
+Switch to:
+
+```html
+<!-- ✅ Use the IIFE build instead -->
+<script src="dist/index.global.js"></script>
+```
+
+The global namespace changed from `PardisDatepicker` to `PardisJalaliDatepicker.PardisDatepicker`.
 
 ---
 
