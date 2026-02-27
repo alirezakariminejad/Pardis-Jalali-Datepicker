@@ -143,7 +143,8 @@ The global namespace changed from `PardisDatepicker` to `PardisJalaliDatepicker.
 | `disabledDates` | `{jy,jm,jd}[]` \| `(jy,jm,jd) => boolean` | `null` | Dates to disable — accepts an array of date objects or a predicate function |
 | `highlightedDates` | `{jy,jm,jd,className?}[]` | `null` | Dates to highlight with a custom CSS class (defaults to `'highlighted'`) |
 | `maxRange` | `number` | `null` | Maximum number of days allowed in a range selection |
-| `numeralType` | `'persian'` \| `'latin'` | `'persian'` | Digit style rendered in the calendar — Persian (۰–۹) or Latin (0–9) |
+| `numeralType` | `'persian'` \| `'latin'` \| `'arabic'` | locale default | Digit style: Persian (۰–۹), Latin (0–9), or Arabic (٠–٩). Overrides `locale.numerals` when set. |
+| `locale` | `'fa-IR'` \| `'en-US'` \| `LocaleObject` | `'fa-IR'` | Display locale. Controls month/weekday names, numeral style, and text direction (`rtl`/`ltr`). Pass a built-in string key or a custom locale object. |
 | `onChange` | `function` | `null` | Called when a single date is selected. Receives a [date payload](#date-payload) |
 | `onRangeStart` | `function` | `null` | Called when the first date of a range is picked. Receives a [date payload](#date-payload) |
 | `onRangeSelect` | `function` | `null` | Called when both range dates are selected. Receives `{ start, end }` where each is a [date payload](#date-payload) |
