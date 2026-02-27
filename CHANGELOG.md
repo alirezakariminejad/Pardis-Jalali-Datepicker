@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [Unreleased]
+
+### Removed
+- `mobileMode` option removed from `PardisOptions` TypeScript interface and from the constructor defaults object. The option was silently accepted but never read or acted on. It will be re-added when the bottom-sheet mobile UI is properly implemented (see `docs/Execution-Plan.md` Track B, Task B.1).
+
+### Added
+- `aria-live="polite"` live region on month/year heading (WCAG 2.1 SC 4.1.3). A persistent `.pardis-sr-only` element with `aria-live="polite"` and `aria-atomic="true"` is created in `PardisRenderer` constructor and re-attached after every `innerHTML` replacement. Announces: month+year in day view, year in month view, year range in year view. Confirmed by screen-reader inspection.
+
+### Fixed
+- `aria-describedby` and `aria-expanded` confirmed implemented in source and re-marked ✅ in `docs/jalali-datepicker-docs/03-accessibility.md`.
+
+### Documentation
+- Corrected 30+ false ✅ claims across `docs/jalali-datepicker-docs/` (Phase 0 of `docs/Execution-Plan.md`). Unimplemented features (locale system, SSR safety, framework adapters, headless mode, test suite, dual-month view) now correctly marked 🔲 or ⚠️.
+- Fixed CSS variable prefix in `10-theming.md`: `--jdp-*` → `--pardis-*`.
+- Fixed IIFE global name in `06-package-structure.md`: `window.JalaliDatepicker` → `window.PardisJalaliDatepicker`.
+- Fixed TypeScript source claim in `05-typescript.md`: library is vanilla JS with hand-authored declarations.
+- Fixed `sideEffects` field in `06-package-structure.md`: `false` → `["**/*.css"]`.
+- Updated `12-release-checklist.md` to mark completed v2.x items as ✅.
+- Added design-reference status notice to `docs/jalali-datepicker-docs/README.md`.
+
 ## [2.0.1] - 2026-02-26
 
 ### Added
