@@ -218,8 +218,11 @@
   -webkit-backdrop-filter: blur(var(--pardis-blur));
   overflow: hidden;
   user-select: none;
-  direction: rtl;
+  /* direction is set dynamically via dir="rtl"|"ltr" attribute by JS */
 }
+
+.pardis-calendar[dir="rtl"] { direction: rtl; }
+.pardis-calendar[dir="ltr"] { direction: ltr; }
 
 /* ── Calendar Header ── */
 .pardis-calendar-header {
@@ -383,15 +386,31 @@
   color: var(--pardis-primary);
 }
 
+/* RTL (default Persian): start is visually on the right */
+.pardis-calendar[dir="rtl"] .pardis-day.range-start,
 .pardis-day.range-start {
   border-radius: 0 var(--pardis-radius-day) var(--pardis-radius-day) 0 !important;
 }
 
+.pardis-calendar[dir="rtl"] .pardis-day.range-end,
 .pardis-day.range-end {
   border-radius: var(--pardis-radius-day) 0 0 var(--pardis-radius-day) !important;
 }
 
 .pardis-day.range-start.range-end {
+  border-radius: var(--pardis-radius-day) !important;
+}
+
+/* LTR: start is visually on the left — invert the corner values */
+.pardis-calendar[dir="ltr"] .pardis-day.range-start {
+  border-radius: var(--pardis-radius-day) 0 0 var(--pardis-radius-day) !important;
+}
+
+.pardis-calendar[dir="ltr"] .pardis-day.range-end {
+  border-radius: 0 var(--pardis-radius-day) var(--pardis-radius-day) 0 !important;
+}
+
+.pardis-calendar[dir="ltr"] .pardis-day.range-start.range-end {
   border-radius: var(--pardis-radius-day) !important;
 }
 
@@ -445,12 +464,24 @@
   font-weight: 700;
 }
 
-.pardis-day.hover-range-end.hover-range-end {
+/* RTL hover range */
+.pardis-day.hover-range-end.hover-range-end,
+.pardis-calendar[dir="rtl"] .pardis-day.hover-range-end.hover-range-end {
   border-radius: var(--pardis-radius-day) 0 0 var(--pardis-radius-day);
 }
 
-.pardis-days .pardis-day.range-start ~ .pardis-day.hover-range-end {
+.pardis-days .pardis-day.range-start ~ .pardis-day.hover-range-end,
+.pardis-calendar[dir="rtl"] .pardis-days .pardis-day.range-start ~ .pardis-day.hover-range-end {
   border-radius: var(--pardis-radius-day) 0 0 var(--pardis-radius-day);
+}
+
+/* LTR hover range */
+.pardis-calendar[dir="ltr"] .pardis-day.hover-range-end.hover-range-end {
+  border-radius: 0 var(--pardis-radius-day) var(--pardis-radius-day) 0;
+}
+
+.pardis-calendar[dir="ltr"] .pardis-days .pardis-day.range-start ~ .pardis-day.hover-range-end {
+  border-radius: 0 var(--pardis-radius-day) var(--pardis-radius-day) 0;
 }
 
 /* cursor crosshair while picking end date */
