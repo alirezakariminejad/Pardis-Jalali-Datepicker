@@ -20,6 +20,9 @@
       "Bash(npm install)",
       "Bash(git worktree add .worktrees/v2.0.1-patch v2.0.1-patch)",
       "Bash(git worktree add .worktrees/v2.0.1-patch -b v2.0.1-patch-work)"
+    ],
+    "additionalDirectories": [
+      "/Users/alireza/.claude/projects/-Volumes-T7-PardisJalaliDatepicker-Pardis-Jalali-Datepicker/memory"
     ]
   }
 }
