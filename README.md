@@ -382,6 +382,52 @@ payload.timestamp;           // Unix ms
 
 ---
 
+## Multi-Calendar Support (v3)
+
+Starting in v3, the datepicker supports multiple calendar systems via the `calendar` option.
+
+### Jalali (Default — Unchanged from v2)
+
+```javascript
+// Jalali calendar — default, no change required from v2:
+const picker = new PardisDatepicker('#input', {
+  locale: 'fa-IR',
+});
+```
+
+### Gregorian Calendar
+
+```javascript
+// Gregorian calendar — new in v3:
+const picker = new PardisDatepicker('#input', {
+  calendar: 'gregorian',
+  locale: 'en-US-gregorian',
+  onChange(payload) {
+    console.log(payload.gregorian.year);   // e.g. 2025
+    console.log(payload.gregorian.month);  // e.g. 3
+    console.log(payload.gregorian.day);    // e.g. 21
+    console.log(payload.iso);             // '2025-03-21'
+  },
+});
+```
+
+Both pickers can coexist on the same page. The `calendar` option defaults to `'jalali'`, so all v2 code works unchanged.
+
+### Built-in Locales
+
+| Locale key | Language | Calendar | Direction |
+|---|---|---|---|
+| `fa-IR` | Persian | Jalali | RTL |
+| `en-US` | English (transliterated) | Jalali | LTR |
+| `en-US-gregorian` | English | Gregorian | LTR |
+| `fa-IR-gregorian` | Persian | Gregorian | RTL |
+
+### Migration from v2
+
+No changes required. The `calendar` option defaults to `'jalali'`. If you use `{jy, jm, jd}` in `minDate`/`maxDate`, a console deprecation warning is shown — update to `{year, month, day}` at your convenience before v4.
+
+---
+
 ## Themes
 
 Apply a theme by setting `data-pardis-theme` on `<html>` and a body class:
@@ -439,6 +485,65 @@ You can use `PardisEngine` and `PardisRenderer` directly to build a fully custom
 ## Browser Support
 
 Works in all modern browsers (Chrome, Firefox, Safari, Edge). No polyfills required.
+
+---
+
+## Testing
+
+The library has two levels of automated tests.
+
+### Unit Tests
+
+Validate the headless engine math (Jalali ↔ Gregorian conversion, leap year logic, JDN round-trips, range mode, constraint handling) using plain Node.js scripts — no test runner required.
+
+```bash
+npm test
+```
+
+Covers:
+- `scripts/year-boundary-test.js` — Jalali year boundary and leap year cases
+- `scripts/gregorian-engine-test.js` — Gregorian engine with all leap year rules (1900, 2000, 2024)
+
+### E2E Tests (Playwright)
+
+Validate real browser interaction via [Playwright](https://playwright.dev/). Tests run against Chromium in headless mode.
+
+```bash
+# Run all E2E tests (headless)
+npm run test:e2e
+
+# Open the interactive Playwright UI
+npm run test:e2e:ui
+
+# Run unit tests + E2E in sequence
+npm run test:all
+```
+
+**Prerequisites:** Build the library first (`npm run build`), then install Playwright browsers once:
+
+```bash
+npm run build
+npx playwright install chromium
+```
+
+**Test coverage:**
+
+| File | Tests | What it covers |
+|---|---|---|
+| `e2e/jalali.spec.ts` | 8 | Popover open, Esfand leap/non-leap cell counts, click select, payload shape, month nav, today cell, year grid |
+| `e2e/gregorian.spec.ts` | 8 | February 2023/2024/1900/2000 cell counts, payload shape, Sunday-first weekday, instance independence, month nav |
+| `e2e/range.spec.ts` | 4 | Range start hint, range end + in-range cells, "This Month" preset, clear |
+| `e2e/keyboard.spec.ts` | 5 | ArrowRight focus, Enter select, Escape close, Tab no errors, full keyboard flow |
+
+### CI Usage
+
+```yaml
+- run: npm run build
+- run: npx playwright install --with-deps chromium
+- run: npm run test:all
+```
+
+Set `CI=true` so Playwright starts a fresh server for each run.
 
 ---
 
