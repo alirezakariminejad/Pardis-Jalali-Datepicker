@@ -28,6 +28,9 @@
   "scripts": {
     "build": "tsup && cp lib/pardis-jalali-datepicker.d.ts dist/index.d.ts",
     "test": "node scripts/year-boundary-test.js && node scripts/gregorian-engine-test.js",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:all": "npm test && npm run test:e2e",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
