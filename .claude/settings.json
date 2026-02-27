@@ -19,10 +19,27 @@
       "Bash(git worktree add .worktrees/v2.0.1-patch -b v2.0.1-patch)",
       "Bash(npm install)",
       "Bash(git worktree add .worktrees/v2.0.1-patch v2.0.1-patch)",
-      "Bash(git worktree add .worktrees/v2.0.1-patch -b v2.0.1-patch-work)"
+      "Bash(git worktree add .worktrees/v2.0.1-patch -b v2.0.1-patch-work)",
+      "Bash(node scripts/gregorian-engine-test.js)",
+      "Bash(npm install --save-dev @playwright/test serve)",
+      "Bash(npm ls @playwright/test serve)",
+      "Bash(npx playwright install chromium)",
+      "Bash(npx playwright test --list)",
+      "mcp__playwright__browser_navigate",
+      "Bash(kill %1)",
+      "Bash(npx playwright test e2e/jalali.spec.ts --reporter=list)",
+      "Bash(npx playwright test e2e/gregorian.spec.ts --reporter=list)",
+      "Bash(npx playwright test e2e/range.spec.ts --reporter=list)",
+      "Bash(npx playwright test e2e/keyboard.spec.ts --reporter=list)",
+      "Bash(npm run test:all)",
+      "Bash(git tag -a v3.0.0 -m \"v3.0.0 — Multi-calendar \\(Jalali + Gregorian\\), locale/i18n system, RTL/LTR, E2E tests\")"
     ],
     "additionalDirectories": [
-      "/Users/alireza/.claude/projects/-Volumes-T7-PardisJalaliDatepicker-Pardis-Jalali-Datepicker/memory"
+      "/Users/alireza/.claude/projects/-Volumes-T7-PardisJalaliDatepicker-Pardis-Jalali-Datepicker/memory",
+      "/Volumes/T7/PardisJalaliDatepicker/Pardis-Jalali-Datepicker/e2e"
     ]
+  },
+  "enabledPlugins": {
+    "playwright@claude-plugins-official": true
   }
 }
