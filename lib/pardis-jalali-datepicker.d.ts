@@ -4,6 +4,14 @@ export interface JalaliDate {
   jd: number;
 }
 
+export interface GregorianDate {
+  gy: number;
+  gm: number;
+  gd: number;
+}
+
+export type CalendarType = 'jalali' | 'gregorian';
+
 export interface DateRange {
   start: JalaliDate | null;
   end: JalaliDate | null;
@@ -60,30 +68,32 @@ export interface PardisOptions {
   inline?: boolean;
   rangeMode?: boolean;
   outputFormat?: 'jalali' | 'gregorian' | 'both';
-  minDate?: JalaliDate | null;
-  maxDate?: JalaliDate | null;
+  minDate?: JalaliDate | { year: number; month: number; day: number } | null;
+  maxDate?: JalaliDate | { year: number; month: number; day: number } | null;
   initialYear?: number | null;
   initialMonth?: number | null;
-  disabledDates?: JalaliDate[] | ((jy: number, jm: number, jd: number) => boolean) | null;
-  highlightedDates?: (JalaliDate & { className?: string })[] | null;
+  disabledDates?: JalaliDate[] | { year: number; month: number; day: number }[] | ((year: number, month: number, day: number) => boolean) | null;
+  highlightedDates?: (JalaliDate & { className?: string })[] | ({ year: number; month: number; day: number; className?: string })[] | null;
   maxRange?: number | null;
   /** Digit style. When omitted, defaults to the active locale's numeral setting. */
   numeralType?: 'persian' | 'latin' | 'arabic';
   /**
    * Locale to use for month names, weekday names, UI labels, numeral style,
    * and text direction.
-   *   - string  → load a built-in locale ('fa-IR' | 'en-US')
+   *   - string  → load a built-in locale ('fa-IR' | 'en-US' | 'en-US-gregorian' | 'fa-IR-gregorian')
    *   - object  → use as a custom locale (missing fields fall back to fa-IR)
    *   - null/undefined → default to 'fa-IR'
    */
   locale?: string | PardisLocale | null;
+  /** Calendar system to use. Default: 'jalali'. */
+  calendar?: CalendarType;
   onChange?: ((payload: object) => void) | null;
   onRangeStart?: ((payload: object) => void) | null;
   onRangeSelect?: ((range: DateRange) => void) | null;
   onClear?: (() => void) | null;
 }
 
-/** Built-in locale registry. Keys are BCP 47 locale codes. */
+/** Built-in locale registry. Keys include 'fa-IR', 'en-US', 'en-US-gregorian', 'fa-IR-gregorian'. */
 export declare const PARDIS_LOCALES: Record<string, Required<PardisLocale>>;
 
 /**
@@ -106,6 +116,7 @@ export declare class PardisEngine {
   static MIN_YEAR: number;
   static MAX_YEAR: number;
   static buildDatePayload(jy: number, jm: number, jd: number, format?: 'jalali' | 'gregorian' | 'both'): object;
+  static buildGregorianPayload(gy: number, gm: number, gd: number, format?: 'jalali' | 'gregorian' | 'both'): object;
   static formatNum(n: number, numeralType: 'persian' | 'latin' | 'arabic'): string;
   static toPersianNum(n: number): string;
   static toArabicNum(n: number): string;

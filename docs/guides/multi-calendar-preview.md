@@ -1,9 +1,6 @@
 # Multi-Calendar Support — Feature Preview
 
-> **This feature is not available in the current stable version.**
-> All API examples on this page are proposals for **v3**, which is under design.
-> The current stable release is **v2.x**.
-> Do not use these examples in production code targeting v2.
+> **Status:** Available in v3. Current stable: v3.0.
 
 ---
 
@@ -58,7 +55,7 @@ The `calendar` option determines which calendar system is used for date arithmet
 They are independent. You can combine them freely:
 
 ```javascript
-// v3 (proposed):
+// v3:
 
 // Gregorian calendar with Persian language UI:
 const picker = new PardisDatepicker('#input', {
@@ -110,7 +107,7 @@ The `onChange` callback payload will be enhanced in v3 to always include both Ja
 ### Jalali engine payload (calendar: 'jalali')
 
 ```javascript
-// v3 (proposed):
+// v3:
 {
   calendar: 'jalali',
   jalali: {
@@ -139,7 +136,7 @@ The `jalali` and `gregorian` sub-objects are always both present, regardless of 
 ### Gregorian engine payload (calendar: 'gregorian')
 
 ```javascript
-// v3 (proposed):
+// v3:
 {
   calendar: 'gregorian',
   gregorian: {
@@ -169,7 +166,7 @@ The `jalali` and `gregorian` sub-objects are always both present, regardless of 
 Range mode works identically across both calendar systems:
 
 ```javascript
-// v3 (proposed):
+// v3:
 const rangePicker = new PardisDatepicker('#range-input', {
   calendar: 'gregorian',
   locale: 'en-US-gregorian',
@@ -188,7 +185,7 @@ const rangePicker = new PardisDatepicker('#range-input', {
 Different calendar systems can coexist on the same page. Each `PardisDatepicker` instance is fully independent:
 
 ```javascript
-// v3 (proposed):
+// v3:
 
 // Jalali picker for Persian-calendar form field:
 new PardisDatepicker('#birth-date-jalali', {
@@ -249,7 +246,7 @@ new PardisDatepicker('#input', {
 
 ---
 
-## TypeScript Definitions (v3 Proposal)
+## TypeScript Definitions
 
 The TypeScript types will be updated in v3 to reflect the new option and payload shapes:
 
@@ -307,6 +304,4 @@ This document will be updated as v3 design progresses toward implementation. To 
 
 ---
 
-> **Reminder:** Everything on this page is a design proposal for v3.
-> **This feature is not available in the current stable version (v2.x).**
-> Do not use these API shapes in production code today.
+> **Status:** Available in v3. All API examples on this page are implemented and available.

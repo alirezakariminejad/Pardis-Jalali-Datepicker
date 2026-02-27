@@ -6,23 +6,40 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
-### Removed
-- `mobileMode` option removed from `PardisOptions` TypeScript interface and from the constructor defaults object. The option was silently accepted but never read or acted on. It will be re-added when the bottom-sheet mobile UI is properly implemented (see `docs/Execution-Plan.md` Track B, Task B.1).
+## [3.0.0] - 2026-02-27
 
 ### Added
-- `aria-live="polite"` live region on month/year heading (WCAG 2.1 SC 4.1.3). A persistent `.pardis-sr-only` element with `aria-live="polite"` and `aria-atomic="true"` is created in `PardisRenderer` constructor and re-attached after every `innerHTML` replacement. Announces: month+year in day view, year in month view, year range in year view. Confirmed by screen-reader inspection.
+- **Multi-calendar support** — new `calendar: 'jalali' | 'gregorian'` option on `PardisDatepicker`. Default remains `'jalali'`; backward-incompatible code is not required.
+- **Pluggable calendar engine abstraction** — `JalaliEngine` and `GregorianEngine` classes implementing a common `CalendarEngine` interface (JDN-based arithmetic, `toJDN`/`fromJDN`, `getDaysInMonth`, `isLeapYear`, `getWeekdayOffset`, `toGregorian`/`fromGregorian`). Gregorian engine correctly handles the century non-leap (1900) and 400-year leap (2000) rules.
+- **Locale / i18n system** — new `locale` option accepting a locale code string (`'fa-IR'`, `'en-US'`, `'en-US-gregorian'`, `'fa-IR-gregorian'`), a locale object, or `null` (defaults to `fa-IR`). Built-in registry `PARDIS_LOCALES` and `resolveLocale()` helper exported for custom locales.
+- **Built-in locales:** `fa-IR` (Jalali RTL, Persian numerals), `en-US` (Jalali LTR, Latin), `en-US-gregorian` (Gregorian LTR, Sunday-first), `fa-IR-gregorian` (Gregorian RTL, Persian numerals, Saturday-first).
+- **RTL / LTR direction** — calendar renders with `dir="rtl"` or `dir="ltr"` based on the active locale. Arrow-key and swipe navigation respect the writing direction.
+- **Arabic (Eastern) numerals** — `numeralType: 'arabic'` renders `٠١٢٣٤٥٦٧٨٩` throughout the calendar.
+- **Generic day-cell attributes** — all day cells now carry `data-year`, `data-month`, `data-day` attributes (calendar-agnostic). Jalali cells additionally expose `.jy/.jm/.jd`; Gregorian cells expose `.gy/.gm/.gd` for backward-compatible DOM access.
+- `_buildPayload()` instance method and `buildGregorianPayload()` static method for structured `{ jalali, gregorian, iso, timestamp }` select payloads.
+- `_normalizeConstraintTuple()` — legacy `{ jy, jm, jd }` constraint objects still accepted (with a one-time deprecation console warning); new code should use `{ year, month, day }`.
+- **E2E test suite** — 25 Playwright tests across 4 spec files (`e2e/jalali.spec.ts`, `e2e/gregorian.spec.ts`, `e2e/range.spec.ts`, `e2e/keyboard.spec.ts`) covering popover, leap-year cell counts, payload shapes, range selection, keyboard navigation, and multi-calendar isolation.
+- **Gregorian unit tests** — `scripts/gregorian-engine-test.js` with 12 tests: leap-year rules (1900, 2000, 2024), JDN round-trips, payload shape, range mode, backward-compat shims, constraint handling.
+- `npm run test:e2e`, `test:e2e:ui`, `test:all` scripts.
+- `aria-live="polite"` live region on month/year heading (WCAG 2.1 SC 4.1.3). Announces: month+year in day view, year in month view, year range in year view.
+
+### Removed
+- `mobileMode` option removed from `PardisOptions` TypeScript interface and constructor defaults. The option was silently accepted but never acted on. It will be re-added when the bottom-sheet mobile UI is implemented.
 
 ### Fixed
 - `aria-describedby` and `aria-expanded` confirmed implemented in source and re-marked ✅ in `docs/jalali-datepicker-docs/03-accessibility.md`.
 
+### Changed
+- Internal state tuples use generic `{ year, month, day }` instead of Jalali-specific `{ jy, jm, jd }`. Public API and events are unchanged.
+- All engine arithmetic delegates through the `_calEngine` abstraction; `JalaaliUtil` is no longer called directly from `PardisEngine` or `PardisRenderer`.
+
 ### Documentation
-- Corrected 30+ false ✅ claims across `docs/jalali-datepicker-docs/` (Phase 0 of `docs/Execution-Plan.md`). Unimplemented features (locale system, SSR safety, framework adapters, headless mode, test suite, dual-month view) now correctly marked 🔲 or ⚠️.
+- Corrected 30+ false ✅ claims across `docs/jalali-datepicker-docs/`. Unimplemented features now correctly marked 🔲 or ⚠️.
 - Fixed CSS variable prefix in `10-theming.md`: `--jdp-*` → `--pardis-*`.
 - Fixed IIFE global name in `06-package-structure.md`: `window.JalaliDatepicker` → `window.PardisJalaliDatepicker`.
 - Fixed TypeScript source claim in `05-typescript.md`: library is vanilla JS with hand-authored declarations.
 - Fixed `sideEffects` field in `06-package-structure.md`: `false` → `["**/*.css"]`.
-- Updated `12-release-checklist.md` to mark completed v2.x items as ✅.
-- Added design-reference status notice to `docs/jalali-datepicker-docs/README.md`.
+- Added Testing section to README documenting unit tests and E2E Playwright setup with CI snippet.
 
 ## [2.0.1] - 2026-02-26
 

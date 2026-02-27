@@ -627,3 +627,24 @@ v3.x → v4.0 (remove deprecated {jy,jm,jd} usage; breaking cleanup)
 
 *RFC authored 2026-02-27. Review and feedback welcome via GitHub Issues.*
 *This document will be updated as the design evolves toward implementation.*
+
+---
+
+## 10. Implementation Status
+
+| Component | Status | Notes |
+|---|---|---|
+| `CalendarEngine` interface | Completed | JSDoc contract in `lib/pardis-jalali-datepicker.js` |
+| `JalaliEngine` class | Completed | Wraps `JalaaliUtil`, zero behavior change |
+| `GregorianEngine` class | Completed | Pure JS, uses `Date` for DOW, custom JDN math |
+| Gregorian built-in locales | Completed | `en-US-gregorian`, `fa-IR-gregorian` |
+| `PardisEngine` engine delegation | Completed | All JalaaliUtil call sites replaced |
+| `getDaysOfMonth()` generic cells | Completed | `year/month/day` canonical fields added |
+| Renderer generic fields | Completed | `data-year/month/day` DOM attributes |
+| Keyboard nav engine delegation | Completed | `_focusDayOffset` uses engine JDN |
+| `PardisInputMask` engine-aware | Completed | Uses engine for month length validation |
+| Deprecation warnings | Completed | `{jy,jm,jd}` constraint tuples warn once |
+| TypeScript definitions | Completed | `CalendarType`, `calendar` option added |
+| Tests | Completed | `scripts/gregorian-engine-test.js` (12 tests) |
+
+**Implementation shipped in: v3.0.0**
