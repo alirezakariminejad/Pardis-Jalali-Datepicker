@@ -2,7 +2,7 @@
 title: "Core Feature Checklist"
 section: 2
 tags: [jalali, datepicker, features, calendar-engine, range, navigation]
-last_updated: 2025-02
+last_updated: 2026-02
 ---
 
 # Core Feature Checklist
@@ -43,7 +43,7 @@ The engine is the most critical part. Every other feature depends on correct Jal
 | ✅ | Range hover preview | As user hovers days, show preview of the potential range. |
 | ✅ | Preset ranges (This week, This month…) | Provide: 'هفته جاری', 'ماه جاری', '۷ روز گذشته', 'سه ماهه' etc. |
 | ✅ | Max range length constraint | `maxRange: 30` — prevent selecting ranges > N days. |
-| ✅ | Dual-month view for ranges | Show 2 months side-by-side on desktop; 1 month stacked on mobile. |
+| 🔲 | Dual-month view for ranges | Not implemented. Show 2 months side-by-side on desktop; 1 month stacked on mobile. |
 | 🔲 | Multi-date selection (non-contiguous) | Click multiple non-adjacent dates; emit array of dates. |
 
 ## 2.4 Navigation & Views
@@ -54,7 +54,7 @@ The engine is the most critical part. Every other feature depends on correct Jal
 | ✅ | Month/Year header is clickable | Click month to see month-picker view; click year to see year-picker. |
 | ✅ | Year-range picker (decade view) | Display 10-year grid for fast year jumping. |
 | ✅ | Month picker grid view | 12-month grid to jump directly to any month. |
-| ✅ | Multi-month view (1–3 months) | `monthsShown: 1\|2\|3` prop. |
+| 🔲 | Multi-month view (1–3 months) | Not implemented. `monthsShown: 1\|2\|3` prop — planned option. |
 | ✅ | Swipe gestures on touch | Swipe left = next month; swipe right = prev month. |
 | 🔲 | Infinite scroll / continuous months | Scroll vertically through months (mobile booking-style). |
 

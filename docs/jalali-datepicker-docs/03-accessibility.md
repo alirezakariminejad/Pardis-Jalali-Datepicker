@@ -2,7 +2,7 @@
 title: "Accessibility (WCAG 2.2 AA)"
 section: 3
 tags: [jalali, datepicker, accessibility, wcag, aria, keyboard, rtl]
-last_updated: 2025-02
+last_updated: 2026-02
 ---
 
 # Accessibility (WCAG 2.2 AA)
@@ -18,9 +18,9 @@ Datepickers are among the **most common accessibility failures** in web applicat
 | ✅ | `aria-label` on day cells | Full date string in Farsi: e.g., '۱۵ فروردین ۱۴۰۳' — not just '15'. |
 | ✅ | `aria-selected` on selected date | Set `aria-selected='true'` on the active day gridcell. |
 | ✅ | `aria-disabled` on disabled dates | Plus `tabindex='-1'` to remove from Tab order. |
-| ✅ | `aria-live='polite'` on month heading | Announce month/year change to screen reader when navigating. |
-| ✅ | `aria-describedby` on input field | Point to helper text explaining expected format (YYYY/MM/DD). |
-| ✅ | `aria-expanded` on trigger button | Reflect open/closed state of the popup. |
+| ✅ | `aria-live='polite'` on month heading | Implemented (v2.1.0). A persistent `.pardis-sr-only` live region (`aria-live='polite'`, `aria-atomic='true'`) is created in the `PardisRenderer` constructor and re-attached after each `innerHTML` replacement. Announces the current month+year in day view, year in month view, and year range in year view. |
+| ✅ | `aria-describedby` on input field | Implemented (`lib/pardis-jalali-datepicker.js:1171-1177`). Creates a `.pardis-sr-only` span with "فرمت تاریخ: سال/ماه/روز" and links it via `aria-describedby`. |
+| ✅ | `aria-expanded` on trigger button | Implemented on the input element: `'false'` on init (line 1178), `'true'` in `open()` (line 1396), `'false'` in `close()` (line 1403). |
 | ✅ | Focus confirmation on date select | After dialog closes, screen reader announces selected date. |
 
 ## 3.2 Keyboard Navigation Contract

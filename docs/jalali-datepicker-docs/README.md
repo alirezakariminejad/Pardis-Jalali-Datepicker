@@ -2,10 +2,26 @@
 title: "Persian Jalali Datepicker — Documentation Index"
 section: 0
 tags: [jalali, datepicker, persian, shamsi, index]
-last_updated: 2025-02
+last_updated: 2026-02
 ---
 
 # Persian Jalali / Shamsi Datepicker — Documentation
+
+> **⚠️ IMPORTANT — Design Reference, Not Current State**
+>
+> The documents in this directory (`docs/jalali-datepicker-docs/`) were written as a **design
+> specification and reference target** for a high-quality Jalali datepicker library. They describe
+> what a complete library *should* implement, not necessarily what `pardis-jalali-datepicker` v2.x
+> currently implements.
+>
+> **For accurate information about the current library**, refer to:
+> - [`README.md`](../../README.md) — authoritative API reference and feature list
+> - [`CHANGELOG.md`](../../CHANGELOG.md) — history of what has actually been implemented
+> - [`docs/Documentation-vs-Implementation-Audit-Report.md`](../Documentation-vs-Implementation-Audit-Report.md) — full gap analysis (alignment score: 42/100 at v2.0.1)
+>
+> Items marked ✅ in individual files reflect *design requirements*, not confirmed implementation.
+> Items that were incorrectly marked ✅ have been corrected to 🔲 or ⚠️ as of 2026-02-26.
+> See [`docs/Execution-Plan.md`](../Execution-Plan.md) for the roadmap to close the gaps.
 
 This documentation set covers everything needed to build, publish, and maintain a high-quality Persian Jalali (Solar Hijri / Shamsi) datepicker library for npm. It addresses calendar arithmetic, accessibility (WCAG 2.2 AA), TypeScript types, SSR compatibility, mobile UX, framework adapters, and open-source release practices.
 
