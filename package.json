@@ -27,7 +27,7 @@
   },
   "scripts": {
     "build": "tsup && cp lib/pardis-jalali-datepicker.d.ts dist/index.d.ts",
-    "test": "node scripts/year-boundary-test.js",
+    "test": "node scripts/year-boundary-test.js && node scripts/gregorian-engine-test.js",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -55,6 +55,8 @@
     "url": "https://github.com/alirezakariminejad/Pardis-Jalali-Datepicker/issues"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "serve": "^14.2.5",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   }
