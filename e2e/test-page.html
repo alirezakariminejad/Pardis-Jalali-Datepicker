@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pardis E2E Test Sandbox</title>
+  <link rel="stylesheet" href="/lib/pardis-jalali-datepicker.css" />
+  <style>
+    body { font-family: sans-serif; padding: 24px; background: #f9f9f9; }
+    .section { margin-bottom: 32px; }
+    h2 { font-size: 12px; color: #999; margin-bottom: 8px; }
+    input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px;
+            font-size: 14px; width: 200px; }
+    label { display: block; margin-bottom: 4px; font-size: 12px; color: #555; }
+    .inline-host { display: inline-block; vertical-align: top; margin-right: 24px; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Popover inputs ── -->
+  <div class="section">
+    <h2>Popover inputs</h2>
+    <label for="jalali-input">Jalali (default)</label>
+    <input id="jalali-input" type="text" autocomplete="off" placeholder="Jalali date" />
+    <br /><br />
+    <label for="gregorian-input">Gregorian</label>
+    <input id="gregorian-input" type="text" autocomplete="off" placeholder="Gregorian date" />
+    <br /><br />
+    <label for="range-input">Range (Jalali)</label>
+    <input id="range-input" type="text" autocomplete="off" placeholder="Range" />
+  </div>
+
+  <!-- ── General inline ── -->
+  <div class="section">
+    <h2>General inline</h2>
+    <div id="jalali-inline"    class="inline-host"></div>
+    <div id="gregorian-inline" class="inline-host"></div>
+    <div id="range-inline"     class="inline-host"></div>
+  </div>
+
+  <!-- ── Month-length targets ── -->
+  <div class="section">
+    <h2>Month-length targets</h2>
+    <div id="esfand-1402" class="inline-host"></div>
+    <div id="esfand-1403" class="inline-host"></div>
+    <div id="feb-2023"    class="inline-host"></div>
+    <div id="feb-2024"    class="inline-host"></div>
+    <div id="feb-1900"    class="inline-host"></div>
+    <div id="feb-2000"    class="inline-host"></div>
+  </div>
+
+  <!-- ── Keyboard test target ── -->
+  <div class="section">
+    <h2>Keyboard test target</h2>
+    <div id="keyboard-target" class="inline-host"></div>
+  </div>
+
+  <script src="/dist/index.global.js"></script>
+  <script>
+    const { PardisDatepicker } = PardisJalaliDatepicker;
+
+    // ── Popover pickers ──
+    window.__jalali     = new PardisDatepicker('#jalali-input');
+    window.__gregorian  = new PardisDatepicker('#gregorian-input', {
+      calendar: 'gregorian',
+      locale:   'en-US-gregorian',
+    });
+    window.__range      = new PardisDatepicker('#range-input', { rangeMode: true });
+
+    // ── General inline ──
+    window.__jalaliInline = new PardisDatepicker('#jalali-inline', { inline: true });
+    window.__gregorianInline = new PardisDatepicker('#gregorian-inline', {
+      calendar: 'gregorian',
+      locale:   'en-US-gregorian',
+      inline:   true,
+    });
+    window.__rangeInline = new PardisDatepicker('#range-inline', {
+      rangeMode: true,
+      inline:    true,
+    });
+
+    // ── Month-length inline instances ──
+    window.__esfand1402 = new PardisDatepicker('#esfand-1402', {
+      inline: true, initialYear: 1402, initialMonth: 12,
+    });
+    window.__esfand1403 = new PardisDatepicker('#esfand-1403', {
+      inline: true, initialYear: 1403, initialMonth: 12,
+    });
+    window.__feb2023 = new PardisDatepicker('#feb-2023', {
+      calendar: 'gregorian', locale: 'en-US-gregorian',
+      inline: true, initialYear: 2023, initialMonth: 2,
+    });
+    window.__feb2024 = new PardisDatepicker('#feb-2024', {
+      calendar: 'gregorian', locale: 'en-US-gregorian',
+      inline: true, initialYear: 2024, initialMonth: 2,
+    });
+    window.__feb1900 = new PardisDatepicker('#feb-1900', {
+      calendar: 'gregorian', locale: 'en-US-gregorian',
+      inline: true, initialYear: 1900, initialMonth: 2,
+    });
+    window.__feb2000 = new PardisDatepicker('#feb-2000', {
+      calendar: 'gregorian', locale: 'en-US-gregorian',
+      inline: true, initialYear: 2000, initialMonth: 2,
+    });
+
+    // ── Keyboard test target — Gregorian LTR, Jan 2025 ──
+    window.__keyboardTarget = new PardisDatepicker('#keyboard-target', {
+      calendar:     'gregorian',
+      locale:       'en-US-gregorian',
+      inline:       true,
+      initialYear:  2025,
+      initialMonth: 1,
+    });
+
+    // ── Shared payload helpers ──
+    window.__lastPayload      = null;
+    window.__lastRangePayload = null;
+
+    window.__jalaliInline.engine.on('select',      p  => { window.__lastPayload      = p; });
+    window.__gregorianInline.engine.on('select',   p  => { window.__lastPayload      = p; });
+    window.__rangeInline.engine.on('rangeSelect',  p  => { window.__lastRangePayload = p; });
+    window.__rangeInline.engine.on('rangeStart',   () => { window.__rangeStarted     = true; });
+  </script>
+</body>
+</html>
